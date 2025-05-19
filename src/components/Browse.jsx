@@ -1,7 +1,12 @@
+import Header from "./Header";
+
+
+
 const Browse = () => {
     return (
         <div>
-            <h1>Browse</h1>
+            <Header />
+            <h1 className="text-3xl font-bold underline">Browse</h1>
         </div>
     );
 };
