@@ -37,7 +37,7 @@ const Login = () => {
     }
     if (IsSignin) {
       if (IsSignin) {
-        console.log("Signin");
+        // console.log("Signin");
         signInWithEmailAndPassword(
           auth,
           email.current.value,
@@ -51,7 +51,7 @@ const Login = () => {
             // ...
           })
           .catch((error) => {
-            console.log(error); // log the full error
+            // console.log(error); // log the full error
             const errorCode = error.code;
             const errorMessage = error.message;
             setErrorMsg(errorCode + " " + errorMessage);
@@ -70,7 +70,7 @@ const Login = () => {
               const { uid, email, displayName } = auth.currentUser;
 
               dispatch(login({ uid: uid, email: email, name: displayName }));
-              console.log(user);
+              // console.log(user);
               Navigate("/Browse");
             })
             .catch((error) => {
@@ -79,7 +79,7 @@ const Login = () => {
             });
         })
         .catch((error) => {
-          console.log(error); // log the full error
+          // console.log(error); // log the full error
           const errorCode = error.code;
           const errorMessage = error.message;
           setErrorMsg(errorCode + " " + errorMessage);
