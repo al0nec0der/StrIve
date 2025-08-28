@@ -7,10 +7,10 @@ const MainContainer = () => {
   const movies = useSelector((state) => state.movies.movies);
   if (!movies) return null;
 
-  const movie = movies[13];
-    // console.log(movie);
-    
-    const { original_title, overview, id } = movie;
+  if (!movies) return null;
+
+  const movie = movies[Math.floor(Math.random() * movies.length)];
+  const { original_title, overview, id } = movie;
   return (
     <div>
       <PosterTitle title={original_title} overview={overview} />
