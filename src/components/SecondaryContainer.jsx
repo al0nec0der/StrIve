@@ -1,24 +1,72 @@
-import React from "react";
+// src/components/SecondaryContainer.jsx - UPDATED
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import MoviePlayer from "./MoviePlayer";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   if (!movies.nowPlayingMovies) return null;
 
   const MovieCard = ({ movie }) => {
     if (!movie.poster_path) return null;
 
+    const handleMovieClick = () => {
+      console.log(
+        `Selected movie: ${movie.original_title} (TMDB ID: ${movie.id})`
+      );
+      setSelectedMovie(movie);
+    };
+
     return (
-      <div className="flex-none w-48 mr-4 cursor-pointer group">
-        <img
-          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-          alt={movie.original_title}
-          className="w-full h-72 object-cover rounded-md group-hover:scale-105 transition-transform duration-300"
-        />
-        <h3 className="text-white text-sm mt-2 truncate">
-          {movie.original_title}
-        </h3>
+      <div
+        className="flex-none w-48 mr-4 cursor-pointer group transition-all duration-300"
+        onClick={handleMovieClick}
+      >
+        <div className="relative overflow-hidden rounded-lg">
+          <img
+            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            alt={movie.original_title}
+            className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+
+          {/* Enhanced Play overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="bg-white rounded-full p-2 mb-2">
+                    <svg
+                      className="w-6 h-6 text-black"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">
+                  HD
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rating badge */}
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+            ⭐ {movie.vote_average.toFixed(1)}
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <h3 className="text-white text-sm font-medium truncate group-hover:text-red-400 transition-colors">
+            {movie.original_title}
+          </h3>
+          <p className="text-gray-400 text-xs">
+            {movie.release_date?.split("-")[0]} • Movie
+          </p>
+        </div>
       </div>
     );
   };
@@ -39,14 +87,22 @@ const SecondaryContainer = () => {
   };
 
   return (
-    <div className="relative bg-black pt-16 pb-20">
-      {" "}
-      {/* Added proper spacing */}
-      <MovieList title="Now Playing" movies={movies.nowPlayingMovies} />
-      <MovieList title="Popular" movies={movies.popularMovies} />
-      <MovieList title="Top Rated" movies={movies.topRatedMovies} />
-      <MovieList title="Upcoming" movies={movies.upcomingMovies} />
-    </div>
+    <>
+      <div className="relative bg-black pt-16 pb-20">
+        <MovieList title="🔥 Now Playing" movies={movies.nowPlayingMovies} />
+        <MovieList title="🎬 Popular Movies" movies={movies.popularMovies} />
+        <MovieList title="⭐ Top Rated" movies={movies.topRatedMovies} />
+        <MovieList title="🚀 Upcoming" movies={movies.upcomingMovies} />
+      </div>
+
+      {/* Movie Player Modal */}
+      {selectedMovie && (
+        <MoviePlayer
+          movie={selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+        />
+      )}
+    </>
   );
 };
 
