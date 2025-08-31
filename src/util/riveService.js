@@ -1,4 +1,4 @@
-
+// src/util/riveService.js - CORRECTED VERSION
 export class RiveStreamingService {
   static BASE_URL = "https://rivestream.org/embed";
 
@@ -8,7 +8,7 @@ export class RiveStreamingService {
    * @returns {string} - Rive embed URL for the movie
    */
   static getMovieStreamUrl(tmdbId) {
-    return `${this.BASE_URL}/movie/${tmdbId}`;
+    return `${this.BASE_URL}?type=movie&id=${tmdbId}`;
   }
 
   /**
@@ -19,7 +19,7 @@ export class RiveStreamingService {
    * @returns {string} - Rive embed URL for the TV episode
    */
   static getTVStreamUrl(tmdbId, season, episode) {
-    return `${this.BASE_URL}/tv/${tmdbId}/${season}/${episode}`;
+    return `${this.BASE_URL}?type=tv&id=${tmdbId}&s=${season}&e=${episode}`;
   }
 
   /**
@@ -35,11 +35,41 @@ export class RiveStreamingService {
           ? this.getMovieStreamUrl(tmdbId)
           : this.getTVStreamUrl(tmdbId, 1, 1);
 
-      const response = await fetch(url, { method: "HEAD" });
-      return response.ok;
+      // For iframe embeds, we can't reliably check with HEAD request
+      // So we'll assume it's available and handle errors in the player
+      return true;
     } catch (error) {
-      console.error("Error checking content availability:", error);
+      console.error(
+        `Error checking availability for TMDB ID ${tmdbId}:`,
+        error
+      );
       return false;
     }
+  }
+
+  /**
+   * Get alternative streaming URLs for fallback (updated formats)
+   * @param {number} tmdbId - TMDB ID
+   * @returns {Array<object>} - Array of server objects with names and URLs
+   */
+  static getAlternativeServers(tmdbId) {
+    return [
+      {
+        name: "Rive",
+        url: `https://rivestream.org/embed?type=movie&id=${tmdbId}`,
+      },
+      {
+        name: "2Embed",
+        url: `https://www.2embed.to/embed/tmdb/movie?id=${tmdbId}`,
+      },
+      {
+        name: "MultiEmbed",
+        url: `https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1`,
+      },
+      {
+        name: "VidSrc",
+        url: `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+      },
+    ];
   }
 }

@@ -1,4 +1,4 @@
-// src/components/MoviePlayer.jsx - COMPLETE REWRITE
+// src/components/MoviePlayer.jsx - SIMPLIFIED WITH CORRECT URL
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RiveStreamingService } from "../util/riveService";
@@ -8,10 +8,16 @@ const MoviePlayer = ({ movie, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [streamingUrl, setStreamingUrl] = useState("");
+  const [currentServerIndex, setCurrentServerIndex] = useState(0);
   const [isAddedToWatched, setIsAddedToWatched] = useState(false);
 
   const user = useSelector((store) => store.user.user);
   const iframeRef = useRef(null);
+
+  // Get alternative servers
+  const alternativeServers = RiveStreamingService.getAlternativeServers(
+    movie.id
+  );
 
   useEffect(() => {
     const loadMovieStream = async () => {
@@ -23,15 +29,20 @@ const MoviePlayer = ({ movie, onClose }) => {
 
       try {
         setIsLoading(true);
+        setHasError(false);
 
-        // Generate Rive streaming URL using TMDB ID
-        const riveUrl = RiveStreamingService.getMovieStreamUrl(movie.id);
+        const currentServer = alternativeServers[currentServerIndex];
         console.log(
-          `Loading movie stream: ${movie.original_title} (TMDB ID: ${movie.id})`
+          `Loading ${currentServer.name}: ${movie.original_title} (TMDB ID: ${movie.id})`
         );
+        console.log(`Stream URL: ${currentServer.url}`);
 
-        setStreamingUrl(riveUrl);
-        setIsLoading(false);
+        setStreamingUrl(currentServer.url);
+
+        // Give iframe time to load
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
 
         // Auto-add to watched list after 30 seconds of viewing
         setTimeout(() => {
@@ -47,7 +58,7 @@ const MoviePlayer = ({ movie, onClose }) => {
     };
 
     loadMovieStream();
-  }, [movie.id, user]);
+  }, [movie.id, user, currentServerIndex]);
 
   const handleAddToWatched = async () => {
     if (!user || isAddedToWatched) return;
@@ -69,6 +80,14 @@ const MoviePlayer = ({ movie, onClose }) => {
       console.log(`Added ${movie.original_title} to watched list`);
     } catch (error) {
       console.error("Error adding to watched list:", error);
+    }
+  };
+
+  const handleTryNextServer = () => {
+    if (currentServerIndex < alternativeServers.length - 1) {
+      setCurrentServerIndex(currentServerIndex + 1);
+    } else {
+      setHasError(true);
     }
   };
 
@@ -115,12 +134,23 @@ const MoviePlayer = ({ movie, onClose }) => {
               <span>{movie.release_date?.split("-")[0]}</span>
               <span>⭐ {movie.vote_average}/10</span>
               <span className="bg-green-600 px-2 py-1 rounded text-xs">
-                Streaming via Rive
+                Server: {alternativeServers[currentServerIndex]?.name}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleTryNextServer}
+              disabled={currentServerIndex >= alternativeServers.length - 1}
+              className="text-white hover:text-blue-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Try Next Server"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </button>
+
             <button
               onClick={handleFullScreen}
               className="text-white hover:text-yellow-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600"
@@ -149,7 +179,8 @@ const MoviePlayer = ({ movie, onClose }) => {
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600 mx-auto"></div>
                 <div className="mt-4 text-white text-lg">Loading movie...</div>
                 <div className="mt-2 text-gray-400 text-sm">
-                  Connecting to Rive streaming servers
+                  Connecting to {alternativeServers[currentServerIndex]?.name}{" "}
+                  servers
                 </div>
               </div>
             </div>
@@ -161,13 +192,16 @@ const MoviePlayer = ({ movie, onClose }) => {
                 <div className="text-red-500 text-6xl mb-4">⚠️</div>
                 <h3 className="text-white text-xl mb-2">Streaming Error</h3>
                 <p className="text-gray-400 mb-4">
-                  Unable to load "{movie.original_title}". The movie might not
-                  be available on our streaming servers.
+                  Unable to load "{movie.original_title}" from any server.
+                </p>
+                <p className="text-gray-500 text-sm mb-6">
+                  TMDB ID: {movie.id} • Tried {currentServerIndex + 1} of{" "}
+                  {alternativeServers.length} servers
                 </p>
                 <div className="space-y-2">
                   <button
                     onClick={() => window.location.reload()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded mr-2"
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mr-2"
                   >
                     Retry
                   </button>
@@ -209,12 +243,15 @@ const MoviePlayer = ({ movie, onClose }) => {
 
             <div className="flex flex-col gap-2 min-w-[200px]">
               <div className="text-gray-400 text-sm">
-                <span className="text-white font-semibold">Genre:</span> Action,
-                Drama
+                <span className="text-white font-semibold">TMDB ID:</span>{" "}
+                {movie.id}
               </div>
               <div className="text-gray-400 text-sm">
-                <span className="text-white font-semibold">Runtime:</span>{" "}
-                Available via Rive
+                <span className="text-white font-semibold">Stream URL:</span>
+                <br />
+                <span className="text-xs text-green-400 break-all">
+                  {streamingUrl}
+                </span>
               </div>
               {isAddedToWatched && (
                 <div className="bg-green-600/20 text-green-400 text-sm p-2 rounded">
