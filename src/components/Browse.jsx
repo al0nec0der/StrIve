@@ -1,20 +1,19 @@
-
 import useAddMovies from "../hooks/useAddMovies";
-import usePopularMovies from "../hooks/usePopularMovies"; // <-- Import
-import useTopRatedMovies from "../hooks/useTopRatedMovies"; // <-- Import
-import useUpcomingMovies from "../hooks/useUpcomingMovies"; // <-- Import
+import usePopularMovies from "../hooks/usePopularMovies";
+import useTopRatedMovies from "../hooks/useTopRatedMovies";
+import useUpcomingMovies from "../hooks/useUpcomingMovies";
 import Header from "./Header";
 import MainContainer from "./MainContainer";
 import SecondaryContainer from "./SecondaryContainer";
 
 const Browse = () => {
   useAddMovies();
-  usePopularMovies();    // <-- Call hook
-  useTopRatedMovies();   // <-- Call hook
-  useUpcomingMovies();   // <-- Call hook
+  usePopularMovies();
+  useTopRatedMovies();
+  useUpcomingMovies();
 
   return (
-    <div>
+    <div className="bg-black min-h-screen">
       <Header />
       <MainContainer />
       <SecondaryContainer />
@@ -23,5 +22,3 @@ const Browse = () => {
 };
 
 export default Browse;
-
-;

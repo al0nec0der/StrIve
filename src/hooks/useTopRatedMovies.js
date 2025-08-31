@@ -7,11 +7,11 @@ const useTopRatedMovies = () => {
   const dispatch = useDispatch();
   const getTopRatedMovies = async () => {
     const data = await fetch(
-      "https://api.themoviedb.org/3/movie/top_rated?page=1", // <-- Changed endpoint
+      "https://api.themoviedb.org/3/movie/top_rated?page=1",
       options
     );
     const json = await data.json();
-    dispatch(addTopRatedMovies(json.results)); // <-- Changed action
+    dispatch(addTopRatedMovies(json.results));
   };
 
   useEffect(() => {
