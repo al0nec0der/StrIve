@@ -5,15 +5,14 @@ import PosterBackground from "./PosterBackground";
 
 const MainContainer = () => {
   const movies = useSelector((state) => state.movies.movies);
-  if (!movies) return null;
+  if (!movies || movies.length === 0) return null;
 
-  if (!movies) return null;
 
   const movie = movies[Math.floor(Math.random() * movies.length)];
   const { original_title, overview, id } = movie;
   return (
     <div>
-      <PosterTitle title={original_title} overview={overview} />
+      <PosterTitle movie={movie} />
       <PosterBackground movieID={id} />
     </div>
   );
