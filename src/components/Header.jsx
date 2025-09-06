@@ -78,7 +78,7 @@ const Header = () => {
                 </li>
                 <li>
                   <button
-                    onClick={() => {}}
+                    onClick={() => navigate("/TVShows")} // Change this line
                     className="hover:text-red-500 focus:outline-none"
                   >
                     Shows

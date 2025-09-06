@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import Browse from "./Browse";
 import Login from "./Login";
+import TVShows from "./TVShows"; // Add this import
 import { RouterProvider } from "react-router-dom";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -20,20 +21,18 @@ const Body = () => {
       path: "/Browse",
       element: <Browse />,
     },
+    {
+      path: "/TVShows", // Add this new route
+      element: <TVShows />,
+    },
   ]);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/auth.user
         const { uid, email, displayName } = user;
-
         dispatch(login({ uid: uid, email: email, name: displayName }));
-
-        // ...
       } else {
-        // User is signed out
         dispatch(logout());
       }
     });
