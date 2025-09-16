@@ -17,15 +17,15 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   const alternativeServers = [
     {
       name: "Rive TV",
-      url: `https://rivestream.org/embed?type=tv&id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=tv&id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
     },
     {
       name: "2Embed TV",
-      url: `https://www.2embed.to/embed/tmdb/tv?id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_2EMBED_URL}/tv?id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
     },
     {
       name: "MultiEmbed TV",
-      url: `https://multiembed.mov/directstream.php?video_id=${tvShow.id}&tmdb=1&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${tvShow.id}&tmdb=1&s=${season}&e=${episode.episode_number}`,
     },
   ];
 

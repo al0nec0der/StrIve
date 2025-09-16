@@ -1,6 +1,6 @@
-// src/util/riveService.js - CORRECTED VERSION
+22// src/util/riveService.js
 export class RiveStreamingService {
-  static BASE_URL = "https://rivestream.org/embed";
+  static BASE_URL = import.meta.env.VITE_RIVE_BASE_URL;
 
   /**
    * Get streaming URL for a movie using TMDB ID
@@ -24,31 +24,16 @@ export class RiveStreamingService {
 
   /**
    * Check if content is available on Rive
-   * @param {string} type - 'movie' or 'tv'
-   * @param {number} tmdbId - TMDB ID
    * @returns {Promise<boolean>} - Whether content is available
    */
-  static async isContentAvailable(type, tmdbId) {
-    try {
-      const url =
-        type === "movie"
-          ? this.getMovieStreamUrl(tmdbId)
-          : this.getTVStreamUrl(tmdbId, 1, 1);
-
-      // For iframe embeds, we can't reliably check with HEAD request
-      // So we'll assume it's available and handle errors in the player
-      return true;
-    } catch (error) {
-      console.error(
-        `Error checking availability for TMDB ID ${tmdbId}:`,
-        error
-      );
-      return false;
-    }
+  static async isContentAvailable() {
+    // For iframe embeds, we can't reliably check with HEAD request
+    // So we'll assume it's available and handle errors in the player
+    return true;
   }
 
   /**
-   * Get alternative streaming URLs for fallback (updated formats)
+   * Get alternative streaming URLs for fallback
    * @param {number} tmdbId - TMDB ID
    * @returns {Array<object>} - Array of server objects with names and URLs
    */
@@ -56,19 +41,19 @@ export class RiveStreamingService {
     return [
       {
         name: "Rive",
-        url: `https://rivestream.org/embed?type=movie&id=${tmdbId}`,
+        url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=movie&id=${tmdbId}`,
       },
       {
         name: "2Embed",
-        url: `https://www.2embed.to/embed/tmdb/movie?id=${tmdbId}`,
+        url: `${import.meta.env.VITE_2EMBED_URL}/movie?id=${tmdbId}`,
       },
       {
         name: "MultiEmbed",
-        url: `https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1`,
+        url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${tmdbId}&tmdb=1`,
       },
       {
         name: "VidSrc",
-        url: `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`,
+        url: `${import.meta.env.VITE_VIDSRC_URL}/movie?tmdb=${tmdbId}`,
       },
     ];
   }

@@ -246,13 +246,6 @@ const MoviePlayer = ({ movie, onClose }) => {
                 <span className="text-white font-semibold">TMDB ID:</span>{" "}
                 {movie.id}
               </div>
-              <div className="text-gray-400 text-sm">
-                <span className="text-white font-semibold">Stream URL:</span>
-                <br />
-                <span className="text-xs text-green-400 break-all">
-                  {streamingUrl}
-                </span>
-              </div>
               {isAddedToWatched && (
                 <div className="bg-green-600/20 text-green-400 text-sm p-2 rounded">
                   ✅ Added to Watched List

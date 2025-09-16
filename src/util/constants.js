@@ -1,4 +1,4 @@
-// src/util/constants.js - UPDATED
+// src/util/constants.js
 export const options = {
   method: "GET",
   headers: {
@@ -8,14 +8,3 @@ export const options = {
 };
 
 export const IMG_CDN_URL = "https://image.tmdb.org/t/p/w500";
-
-// Rive Streaming Configuration
-export const RIVE_CONFIG = {
-  BASE_URL: "https://rivestream.org/embed",
-  FEATURES: {
-    RESPONSIVE: true,
-    AUTO_QUALITY: true,
-    MULTI_SERVER: true,
-    DAILY_UPDATES: true,
-  },
-};
