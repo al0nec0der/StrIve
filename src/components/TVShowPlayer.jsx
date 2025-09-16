@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
+import { Star, Maximize, RotateCw, X, Lock } from "../components/icons";
 
 const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +121,9 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
         <div className="bg-gray-800 p-8 rounded-lg text-center max-w-md">
-          <div className="text-green-500 text-6xl mb-4">🔒</div>
+          <div className="text-green-500 mb-4">
+            <Lock className="w-16 h-16 mx-auto" />
+          </div>
           <h2 className="text-white text-2xl mb-4">Login Required</h2>
           <p className="text-gray-300 mb-6">
             Please log in to watch TV shows and episodes
@@ -150,7 +153,10 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
             </h2>
             <div className="flex items-center gap-4 text-sm text-gray-300 mt-1">
               <span>{episode.air_date}</span>
-              <span>⭐ {episode.vote_average}/10</span>
+              <span className="flex items-center">
+                <Star className="w-4 h-4 mr-1 text-yellow-400" />
+                {episode.vote_average}/10
+              </span>
               <span className="bg-green-600 px-2 py-1 rounded text-xs">
                 Server: {alternativeServers[currentServerIndex]?.name}
               </span>
@@ -164,9 +170,7 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
               className="text-white hover:text-blue-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Try Next Server"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+              <RotateCw className="w-5 h-5" />
             </button>
 
             <button
@@ -174,17 +178,15 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
               className="text-white hover:text-yellow-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600"
               title="Fullscreen"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-              </svg>
+              <Maximize className="w-5 h-5" />
             </button>
 
             <button
               onClick={onClose}
-              className="text-white hover:text-red-400 text-2xl font-bold p-2 rounded bg-gray-700/50 hover:bg-gray-600"
+              className="text-white hover:text-red-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600"
               title="Close Player"
             >
-              ×
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -208,7 +210,11 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
           {hasError && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
               <div className="text-center max-w-md">
-                <div className="text-green-500 text-6xl mb-4">⚠️</div>
+                <div className="text-green-500 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                </div>
                 <h3 className="text-white text-xl mb-2">Streaming Error</h3>
                 <p className="text-gray-400 mb-4">
                   Unable to load "{episode.name}" from any server.

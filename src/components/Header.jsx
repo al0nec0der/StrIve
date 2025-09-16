@@ -3,6 +3,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../util/firebase";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Search } from "../components/icons";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -101,16 +102,7 @@ const Header = () => {
               className="text-white hover:text-red-500 focus:outline-none"
               onClick={() => {}}
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <Search className="w-6 h-6" />
             </button>
 
             {/* Account icon + Dropdown (black, neat, modern) */}

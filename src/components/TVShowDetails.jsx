@@ -8,6 +8,7 @@ import {
 } from "../util/tvShowsSlice";
 import { addToList } from "../util/firestoreService";
 import TVShowPlayer from "./TVShowPlayer";
+import { ArrowLeft, Play, Plus, Star } from "../components/icons";
 
 const TVShowDetails = ({ tvShow, onBack }) => {
   const [showPlayer, setShowPlayer] = useState(false);
@@ -135,9 +136,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
             onClick={onBack}
             className="absolute top-6 left-6 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
           >
-            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-            </svg>
+            <ArrowLeft className="w-6 h-6" />
           </button>
 
           {/* Content */}
@@ -152,8 +151,9 @@ const TVShowDetails = ({ tvShow, onBack }) => {
                 <span className="text-green-400 font-semibold">
                   {tvShowDetails?.first_air_date?.split("-")[0]}
                 </span>
-                <span className="text-white">
-                  ⭐ {tvShowDetails?.vote_average?.toFixed(1)}/10
+                <span className="text-white flex items-center">
+                  <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
+                  {tvShowDetails?.vote_average?.toFixed(1)}/10
                 </span>
                 <span className="text-white">
                   {tvShowDetails?.number_of_seasons} Seasons
@@ -177,13 +177,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
                   }}
                   className="flex items-center gap-2 px-8 py-4 bg-white text-black text-xl font-semibold rounded hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  <Play className="w-6 h-6" />
                   Play S{selectedSeason}E1
                 </button>
 
@@ -191,13 +185,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
                   onClick={handleAddToWatchlist}
                   className="flex items-center gap-2 px-8 py-4 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                  </svg>
+                  <Plus className="w-6 h-6" />
                   My List
                 </button>
               </div>
@@ -280,7 +268,10 @@ const TVShowDetails = ({ tvShow, onBack }) => {
                         </p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                           <span>Air Date: {episode.air_date}</span>
-                          <span>⭐ {episode.vote_average?.toFixed(1)}</span>
+                          <span className="flex items-center">
+                            <Star className="w-4 h-4 mr-1 text-yellow-400 fill-yellow-400" />
+                            {episode.vote_average?.toFixed(1)}
+                          </span>
                         </div>
                       </div>
                     </div>

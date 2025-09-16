@@ -1,7 +1,7 @@
-// src/components/SecondaryContainer.jsx - UPDATED
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import MoviePlayer from "./MoviePlayer";
+import { Star, Flame, Play, Calendar } from "../components/icons";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
@@ -37,13 +37,7 @@ const SecondaryContainer = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="bg-white rounded-full p-2 mb-2">
-                    <svg
-                      className="w-6 h-6 text-black"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+                    <Play className="w-6 h-6 text-black" />
                   </div>
                 </div>
                 <div className="bg-red-600 text-white text-xs px-2 py-1 rounded">
@@ -54,8 +48,9 @@ const SecondaryContainer = () => {
           </div>
 
           {/* Rating badge */}
-          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-            ⭐ {movie.vote_average.toFixed(1)}
+          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center">
+            <Star className="w-3 h-3 mr-1 text-yellow-400 fill-yellow-400" />
+            {movie.vote_average.toFixed(1)}
           </div>
         </div>
 
@@ -71,12 +66,15 @@ const SecondaryContainer = () => {
     );
   };
 
-  const MovieList = ({ title, movies }) => {
+  const MovieList = ({ title, movies, icon }) => {
     if (!movies) return null;
 
     return (
       <div className="mb-8">
-        <h2 className="text-white text-2xl font-bold mb-4 px-12">{title}</h2>
+        <h2 className="text-white text-2xl font-bold mb-4 px-12 flex items-center gap-2">
+          {icon}
+          {title}
+        </h2>
         <div className="flex overflow-x-scroll scrollbar-hide px-12 pb-4">
           {movies.map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
@@ -89,10 +87,10 @@ const SecondaryContainer = () => {
   return (
     <>
       <div className="relative bg-black pt-16 pb-20">
-        <MovieList title="🔥 Now Playing" movies={movies.nowPlayingMovies} />
-        <MovieList title="🎬 Popular Movies" movies={movies.popularMovies} />
-        <MovieList title="⭐ Top Rated" movies={movies.topRatedMovies} />
-        <MovieList title="🚀 Upcoming" movies={movies.upcomingMovies} />
+        <MovieList title="Now Playing" movies={movies.nowPlayingMovies} icon={<Flame className="w-6 h-6 text-red-500" />} />
+        <MovieList title="Popular Movies" movies={movies.popularMovies} icon={<Play className="w-6 h-6 text-white" />} />
+        <MovieList title="Top Rated" movies={movies.topRatedMovies} icon={<Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />} />
+        <MovieList title="Upcoming" movies={movies.upcomingMovies} icon={<Calendar className="w-6 h-6 text-blue-400" />} />
       </div>
 
       {/* Movie Player Modal */}

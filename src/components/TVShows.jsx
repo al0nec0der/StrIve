@@ -6,6 +6,7 @@ import TVShowDetails from "./TVShowDetails";
 import usePopularTVShows from "../hooks/usePopularTVShows";
 import useTopRatedTVShows from "../hooks/useTopRatedTVShows";
 import useOnTheAirTVShows from "../hooks/useOnTheAirTVShows";
+import { Radio, Flame, Star, Tv } from "../components/icons";
 
 const TVShows = () => {
   const [selectedTVShow, setSelectedTVShow] = useState(null);
@@ -26,7 +27,7 @@ const TVShows = () => {
     return (
       <div className="mb-8">
         <h2 className="text-white text-2xl font-bold mb-4 px-12 flex items-center gap-2">
-          <span>{icon}</span>
+          {icon}
           {title}
         </h2>
         <div className="flex overflow-x-scroll scrollbar-hide px-12 pb-4">
@@ -59,7 +60,10 @@ const TVShows = () => {
       {/* Hero Section */}
       <div className="pt-20 pb-8 px-12">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-white mb-4">📺 TV Shows</h1>
+          <h1 className="text-5xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+            <Tv className="w-12 h-12 text-green-500" />
+            TV Shows
+          </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Discover amazing TV series from around the world. Binge-watch your
             favorite shows anytime, anywhere.
@@ -72,17 +76,17 @@ const TVShows = () => {
         <TVShowList
           title="On The Air"
           shows={tvShows.onTheAirTVShows}
-          icon="🔴"
+          icon={<Radio className="w-6 h-6 text-red-500" />}
         />
         <TVShowList
           title="Popular TV Shows"
           shows={tvShows.popularTVShows}
-          icon="🔥"
+          icon={<Flame className="w-6 h-6 text-orange-500" />}
         />
         <TVShowList
           title="Top Rated"
           shows={tvShows.topRatedTVShows}
-          icon="⭐"
+          icon={<Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />}
         />
       </div>
     </div>

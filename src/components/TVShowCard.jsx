@@ -1,5 +1,6 @@
 import React from "react";
 import { IMG_CDN_URL } from "../util/constants";
+import { Star, Play, Tv } from "../components/icons";
 
 const TVShowCard = ({ tvShow, onTVShowClick }) => {
   if (!tvShow.poster_path) return null;
@@ -27,16 +28,11 @@ const TVShowCard = ({ tvShow, onTVShowClick }) => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="bg-white rounded-full p-2 mb-2">
-                  <svg
-                    className="w-6 h-6 text-black"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  <Play className="w-6 h-6 text-black" />
                 </div>
               </div>
-              <div className="bg-green-600 text-white text-xs px-2 py-1 rounded">
+              <div className="bg-green-600 text-white text-xs px-2 py-1 rounded flex items-center">
+                <Tv className="w-3 h-3 mr-1" />
                 TV
               </div>
             </div>
@@ -44,8 +40,9 @@ const TVShowCard = ({ tvShow, onTVShowClick }) => {
         </div>
 
         {/* Rating badge */}
-        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-          ⭐ {tvShow.vote_average?.toFixed(1)}
+        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center">
+          <Star className="w-3 h-3 mr-1 text-yellow-400 fill-yellow-400" />
+          {tvShow.vote_average?.toFixed(1)}
         </div>
       </div>
 

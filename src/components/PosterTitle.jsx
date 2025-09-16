@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { addToList } from "../util/firestoreService";
 import MoviePlayer from "./MoviePlayer";
+import { Play, Plus } from "../components/icons";
 
 const PosterTitle = ({ movie }) => {
   const user = useSelector((store) => store.user.user);
@@ -58,18 +59,14 @@ const PosterTitle = ({ movie }) => {
               onClick={handlePlayMovie}
               className="flex items-center gap-2 px-8 py-3 bg-white text-black text-xl font-semibold rounded hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
             >
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <Play className="w-6 h-6" />
               Play Now
             </button>
             <button
               onClick={handleAddToWatchlist}
               className="flex items-center gap-2 px-8 py-3 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
             >
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-              </svg>
+              <Plus className="w-6 h-6" />
               My List
             </button>
           </div>
