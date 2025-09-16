@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Star, Flame, Play, Calendar } from "../components/icons";
+import { Star, Flame, Play, Calendar } from "lucide-react";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);

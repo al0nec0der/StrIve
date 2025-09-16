@@ -3,7 +3,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../util/firebase";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Search } from "../components/icons";
+import { Search } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { IMG_CDN_URL } from "../util/constants";
-import { Star, Play, Tv } from "../components/icons";
+import { Star, Play, Tv } from "lucide-react";
 
 const TVShowCard = ({ tvShow }) => {
   if (!tvShow.poster_path) return null;

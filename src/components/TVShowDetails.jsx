@@ -10,7 +10,7 @@ import {
 import { addToList } from "../util/firestoreService";
 import TVShowPlayer from "./TVShowPlayer";
 import Header from "./Header";
-import { ArrowLeft, Play, Plus, Star } from "../components/icons";
+import { ArrowLeft, Play, Plus, Star } from "lucide-react";
 
 const TVShowDetails = () => {
   const { tvId } = useParams();

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addToList } from "../util/firestoreService";
 import MoviePlayer from "./MoviePlayer";
-import { Play, Plus } from "../components/icons";
+import { Play, Plus } from "lucide-react";
 
 const PosterTitle = ({ movie }) => {
   const user = useSelector((store) => store.user.user);

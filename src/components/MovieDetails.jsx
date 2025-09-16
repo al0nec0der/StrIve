@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
-import MoviePlayer from "./MoviePlayer";
 import Header from "./Header";
-import { Play, Plus, Star } from "../components/icons";
+import { Play, Plus, Star } from "lucide-react";
 
 const MovieDetails = () => {
   const { movieId } = useParams();
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showPlayer, setShowPlayer] = useState(false);
+  const navigate = useNavigate();
   const user = useSelector((store) => store.user.user);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     fetchMovieDetails();
@@ -38,9 +36,10 @@ const MovieDetails = () => {
   const handlePlayMovie = () => {
     if (!user) {
       alert("Please log in to watch movies.");
+      navigate("/login");
       return;
     }
-    setShowPlayer(true);
+    navigate(`/movie/${movieId}/play`);
   };
 
   const handleAddToWatchlist = async () => {
@@ -176,13 +175,7 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      {/* Movie Player Modal */}
-      {showPlayer && movieDetails && (
-        <MoviePlayer
-          movie={movieDetails}
-          onClose={() => setShowPlayer(false)}
-        />
-      )}
+      
     </div>
   );
 };

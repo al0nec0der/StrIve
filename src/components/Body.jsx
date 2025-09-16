@@ -4,6 +4,7 @@ import Login from "./Login";
 import TVShows from "./TVShows";
 import MoviesPage from "./MoviesPage";
 import MovieDetails from "./MovieDetails";
+import MoviePlayer from "./MoviePlayer";
 import TVShowDetails from "./TVShowDetails";
 import { RouterProvider } from "react-router-dom";
 import { useEffect } from "react";
@@ -51,9 +52,13 @@ const Body = () => {
       element: <MovieDetails />,
     },
     {
-      path: "/tv/:tvId",
-      element: <TVShowDetails />,
-    },
+        path: "/movie/:movieId/play",
+        element: <MoviePlayer />,
+      },
+      {
+        path: "/tv/:tvId",
+        element: <TVShowDetails />,
+      },
   ]);
 
   useEffect(() => {

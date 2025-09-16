@@ -44,12 +44,18 @@ export class RiveStreamingService {
         url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=movie&id=${tmdbId}`,
       },
       {
+        name: "Cinemaos",
+        url: `${import.meta.env.VITE_CINEMAOS_URL}/${tmdbId}`,
+      },
+      {
         name: "2Embed",
         url: `${import.meta.env.VITE_2EMBED_URL}/movie?id=${tmdbId}`,
       },
       {
         name: "MultiEmbed",
-        url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${tmdbId}&tmdb=1`,
+        url: `${
+          import.meta.env.VITE_MULTIEMBED_URL
+        }/directstream.php?video_id=${tmdbId}&tmdb=1`,
       },
       {
         name: "VidSrc",

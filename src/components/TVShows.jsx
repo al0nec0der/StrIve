@@ -5,7 +5,7 @@ import TVShowCard from "./TVShowCard";
 import usePopularTVShows from "../hooks/usePopularTVShows";
 import useTopRatedTVShows from "../hooks/useTopRatedTVShows";
 import useOnTheAirTVShows from "../hooks/useOnTheAirTVShows";
-import { Radio, Flame, Star, Tv } from "../components/icons";
+import { Radio, Flame, Star, Tv } from "lucide-react";
 
 const TVShows = () => {
   const tvShows = useSelector((store) => store.tvShows);

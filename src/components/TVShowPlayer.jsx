@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
-import { Star, Maximize, RotateCw, X, Lock } from "../components/icons";
+import { Star, Maximize, RotateCw, X, Lock } from "lucide-react";
 
 const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,15 +18,27 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   const alternativeServers = [
     {
       name: "Rive TV",
-      url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=tv&id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=tv&id=${
+        tvShow.id
+      }&s=${season}&e=${episode.episode_number}`,
+    },
+    {
+      name: "Cinemaos TV",
+      url: `${import.meta.env.VITE_CINEMAOS_URL}/${
+        tvShow.id
+      }/${season}/${episode.episode_number}`,
     },
     {
       name: "2Embed TV",
-      url: `${import.meta.env.VITE_2EMBED_URL}/tv?id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_2EMBED_URL}/tv?id=${
+        tvShow.id
+      }&s=${season}&e=${episode.episode_number}`,
     },
     {
       name: "MultiEmbed TV",
-      url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${tvShow.id}&tmdb=1&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${
+        tvShow.id
+      }&tmdb=1&s=${season}&e=${episode.episode_number}`,
     },
   ];
 

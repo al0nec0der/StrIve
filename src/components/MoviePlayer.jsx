@@ -1,11 +1,20 @@
-// src/components/MoviePlayer.jsx - SIMPLIFIED WITH CORRECT URL
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
-import { Star, Maximize, RotateCw, X, Lock } from "../components/icons";
+import {
+  Star,
+  RotateCw,
+  X,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const MoviePlayer = ({ movie, onClose }) => {
+const MoviePlayer = () => {
+  const { movieId } = useParams();
+  const [movieDetails, setMovieDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [streamingUrl, setStreamingUrl] = useState("");
@@ -14,11 +23,33 @@ const MoviePlayer = ({ movie, onClose }) => {
 
   const user = useSelector((store) => store.user.user);
   const iframeRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Get alternative servers
-  const alternativeServers = RiveStreamingService.getAlternativeServers(
-    movie.id
-  );
+  const alternativeServers = RiveStreamingService.getAlternativeServers(movieId);
+
+  useEffect(() => {
+    const fetchMovieDetails = async () => {
+      try {
+        const response = await fetch(
+          `https://api.themoviedb.org/3/movie/${movieId}?language=en-US`,
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4Y2E2MDQ4ZDM4ZjJkN2Y5Y2ZmMjU4Y2IzZGQwN2YxMyIsInN1YiI6IjY1Y2EwMWYxYmYwZjYzMDE4NTI4YjYxOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3bAx3yP-j_30K3YxMv0C3n-Hi0hH6hr_i_n5p_gJ1YI",
+            },
+          }
+        );
+        const data = await response.json();
+        setMovieDetails(data);
+      } catch (error) {
+        console.error("Error fetching movie details:", error);
+      }
+    };
+
+    fetchMovieDetails();
+  }, [movieId]);
 
   useEffect(() => {
     const loadMovieStream = async () => {
@@ -34,18 +65,16 @@ const MoviePlayer = ({ movie, onClose }) => {
 
         const currentServer = alternativeServers[currentServerIndex];
         console.log(
-          `Loading ${currentServer.name}: ${movie.original_title} (TMDB ID: ${movie.id})`
+          `Loading ${currentServer.name}: ${movieDetails?.original_title} (TMDB ID: ${movieId})`
         );
         console.log(`Stream URL: ${currentServer.url}`);
 
         setStreamingUrl(currentServer.url);
 
-        // Give iframe time to load
         setTimeout(() => {
           setIsLoading(false);
         }, 2000);
 
-        // Auto-add to watched list after 30 seconds of viewing
         setTimeout(() => {
           if (user && !isAddedToWatched) {
             handleAddToWatched();
@@ -58,27 +87,29 @@ const MoviePlayer = ({ movie, onClose }) => {
       }
     };
 
-    loadMovieStream();
-  }, [movie.id, user, currentServerIndex]);
+    if (movieDetails) {
+      loadMovieStream();
+    }
+  }, [movieDetails, user, currentServerIndex]);
 
   const handleAddToWatched = async () => {
     if (!user || isAddedToWatched) return;
 
     try {
       const watchedItem = {
-        id: movie.id,
-        title: movie.original_title,
-        poster_path: movie.poster_path,
-        overview: movie.overview,
-        release_date: movie.release_date,
-        vote_average: movie.vote_average,
+        id: movieId,
+        title: movieDetails.original_title,
+        poster_path: movieDetails.poster_path,
+        overview: movieDetails.overview,
+        release_date: movieDetails.release_date,
+        vote_average: movieDetails.vote_average,
         watched_at: new Date().toISOString(),
         type: "movie",
       };
 
       await addToList(user.uid, "watched", watchedItem);
       setIsAddedToWatched(true);
-      console.log(`Added ${movie.original_title} to watched list`);
+      console.log(`Added ${movieDetails.original_title} to watched list`);
     } catch (error) {
       console.error("Error adding to watched list:", error);
     }
@@ -87,18 +118,12 @@ const MoviePlayer = ({ movie, onClose }) => {
   const handleTryNextServer = () => {
     if (currentServerIndex < alternativeServers.length - 1) {
       setCurrentServerIndex(currentServerIndex + 1);
-    } else {
-      setHasError(true);
     }
   };
 
-  const handleFullScreen = () => {
-    if (iframeRef.current) {
-      if (iframeRef.current.requestFullscreen) {
-        iframeRef.current.requestFullscreen();
-      } else if (iframeRef.current.webkitRequestFullscreen) {
-        iframeRef.current.webkitRequestFullscreen();
-      }
+  const handleTryPrevServer = () => {
+    if (currentServerIndex > 0) {
+      setCurrentServerIndex(currentServerIndex - 1);
     }
   };
 
@@ -114,10 +139,10 @@ const MoviePlayer = ({ movie, onClose }) => {
             Please log in to watch movies and TV shows
           </p>
           <button
-            onClick={onClose}
+            onClick={() => navigate("/login")}
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold"
           >
-            Close
+            Login
           </button>
         </div>
       </div>
@@ -125,58 +150,57 @@ const MoviePlayer = ({ movie, onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-98 flex items-center justify-center z-50">
-      <div className="w-full h-full max-w-7xl max-h-full p-2 md:p-4">
-        {/* Header with movie info and controls */}
-        <div className="flex justify-between items-center mb-2 md:mb-4 bg-gray-900/80 p-3 rounded-lg">
-          <div className="flex-1">
-            <h1 className="text-white text-lg md:text-2xl font-bold truncate">
-              {movie.original_title}
-            </h1>
-            <div className="flex items-center gap-4 text-sm text-gray-300">
-              <span>{movie.release_date?.split("-")[0]}</span>
-              <span className="flex items-center">
-                <Star className="w-4 h-4 mr-1 text-yellow-400" />
-                {movie.vote_average}/10
-              </span>
-              <span className="bg-green-600 px-2 py-1 rounded text-xs">
-                Server: {alternativeServers[currentServerIndex]?.name}
-              </span>
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+      <div className="w-full h-full max-w-6xl bg-gray-900 rounded-lg shadow-xl overflow-hidden">
+        <div className="flex justify-between items-center p-3 bg-gray-800">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(`/movie/${movieId}`)}
+              className="text-white hover:text-red-400 p-2 rounded-full bg-gray-700/50 hover:bg-gray-600"
+              title="Go Back"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-white text-xl font-bold truncate">
+                {movieDetails?.original_title}
+              </h1>
+              <div className="flex items-center gap-4 text-sm text-gray-300">
+                <span>{movieDetails?.release_date?.split("-")[0]}</span>
+                <span className="flex items-center">
+                  <Star className="w-4 h-4 mr-1 text-yellow-400" />
+                  {movieDetails?.vote_average}/10
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handleTryPrevServer}
+              disabled={currentServerIndex === 0}
+              className="text-white hover:text-blue-400 p-2 rounded-full bg-gray-700/50 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Previous Server"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="bg-green-600 px-3 py-1 rounded text-xs text-white">
+              Source: {alternativeServers[currentServerIndex]?.name}
+            </span>
+            <button
               onClick={handleTryNextServer}
               disabled={currentServerIndex >= alternativeServers.length - 1}
-              className="text-white hover:text-blue-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Try Next Server"
+              className="text-white hover:text-blue-400 p-2 rounded-full bg-gray-700/50 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Next Server"
             >
-              <RotateCw className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleFullScreen}
-              className="text-white hover:text-yellow-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600"
-              title="Fullscreen"
-            >
-              <Maximize className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="text-white hover:text-red-400 p-2 rounded bg-gray-700/50 hover:bg-gray-600"
-              title="Close Player"
-            >
-              <X className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Video Player */}
-        <div className="relative w-full h-5/6 bg-gray-900 rounded-lg overflow-hidden">
+        <div className="relative w-full h-[calc(100%-64px)] bg-black">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600 mx-auto"></div>
                 <div className="mt-4 text-white text-lg">Loading movie...</div>
@@ -189,19 +213,30 @@ const MoviePlayer = ({ movie, onClose }) => {
           )}
 
           {hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center max-w-md">
                 <div className="text-red-500 mb-4">
-                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  <svg
+                    className="w-16 h-16 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-white text-xl mb-2">Streaming Error</h3>
                 <p className="text-gray-400 mb-4">
-                  Unable to load "{movie.original_title}" from any server.
+                  Unable to load "{movieDetails?.original_title}" from any
+                  server.
                 </p>
                 <p className="text-gray-500 text-sm mb-6">
-                  TMDB ID: {movie.id} • Tried {currentServerIndex + 1} of{" "}
+                  TMDB ID: {movieId} • Tried {currentServerIndex + 1} of{" "}
                   {alternativeServers.length} servers
                 </p>
                 <div className="space-y-2">
@@ -212,10 +247,10 @@ const MoviePlayer = ({ movie, onClose }) => {
                     Retry
                   </button>
                   <button
-                    onClick={onClose}
+                    onClick={() => navigate(`/movie/${movieId}`)}
                     className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded"
                   >
-                    Close Player
+                    Go Back
                   </button>
                 </div>
               </div>
@@ -227,38 +262,12 @@ const MoviePlayer = ({ movie, onClose }) => {
               ref={iframeRef}
               src={streamingUrl}
               className="w-full h-full border-0"
-              title={`Streaming ${movie.original_title}`}
+              title={`Streaming ${movieDetails?.original_title}`}
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             />
           )}
-        </div>
-
-        {/* Movie Details Panel */}
-        <div className="mt-2 md:mt-4 bg-gray-800/80 p-3 md:p-4 rounded-lg">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <h3 className="text-white font-semibold mb-2">
-                About this movie
-              </h3>
-              <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
-                {movie.overview}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2 min-w-[200px]">
-              <div className="text-gray-400 text-sm">
-                <span className="text-white font-semibold">TMDB ID:</span>{" "}
-                {movie.id}
-              </div>
-              {isAddedToWatched && (
-                <div className="bg-green-600/20 text-green-400 text-sm p-2 rounded">
-                  ✅ Added to Watched List
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
