@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { options, IMG_CDN_URL } from "../util/constants";
 import {
@@ -8,9 +9,12 @@ import {
 } from "../util/tvShowsSlice";
 import { addToList } from "../util/firestoreService";
 import TVShowPlayer from "./TVShowPlayer";
+import Header from "./Header";
 import { ArrowLeft, Play, Plus, Star } from "../components/icons";
 
-const TVShowDetails = ({ tvShow, onBack }) => {
+const TVShowDetails = () => {
+  const { tvId } = useParams();
+  const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +27,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
 
   useEffect(() => {
     fetchTVShowDetails();
-  }, [tvShow.id]);
+  }, [tvId]);
 
   const fetchTVShowDetails = async () => {
     try {
@@ -31,7 +35,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
 
       // Fetch detailed TV show information
       const detailsResponse = await fetch(
-        `https://api.themoviedb.org/3/tv/${tvShow.id}?language=en-US`,
+        `https://api.themoviedb.org/3/tv/${tvId}?language=en-US`,
         options
       );
       const detailsData = await detailsResponse.json();
@@ -55,7 +59,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
   const fetchSeasonDetails = async (seasonNumber) => {
     try {
       const seasonResponse = await fetch(
-        `https://api.themoviedb.org/3/tv/${tvShow.id}/season/${seasonNumber}?language=en-US`,
+        `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?language=en-US`,
         options
       );
       const seasonData = await seasonResponse.json();
@@ -87,12 +91,12 @@ const TVShowDetails = ({ tvShow, onBack }) => {
 
     try {
       const mediaItem = {
-        id: tvShow.id,
-        title: tvShow.name,
-        poster_path: tvShow.poster_path,
-        overview: tvShow.overview,
-        first_air_date: tvShow.first_air_date,
-        vote_average: tvShow.vote_average,
+        id: tvId,
+        title: tvShowDetails?.name || "TV Show",
+        poster_path: tvShowDetails?.poster_path,
+        overview: tvShowDetails?.overview,
+        first_air_date: tvShowDetails?.first_air_date,
+        vote_average: tvShowDetails?.vote_average,
         type: "tv",
       };
 
@@ -117,13 +121,15 @@ const TVShowDetails = ({ tvShow, onBack }) => {
 
   return (
     <>
+      <Header />
+      
       <div className="bg-black min-h-screen">
         {/* Background Image */}
         <div
           className="relative h-screen bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${IMG_CDN_URL}${
-              tvShowDetails?.backdrop_path || tvShow.backdrop_path
+              tvShowDetails?.backdrop_path
             })`,
           }}
         >
@@ -133,7 +139,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
 
           {/* Back Button */}
           <button
-            onClick={onBack}
+            onClick={() => navigate("/TVShows")}
             className="absolute top-6 left-6 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -143,7 +149,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
           <div className="absolute bottom-0 left-0 right-0 p-12 z-10">
             <div className="max-w-4xl">
               <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
-                {tvShowDetails?.name || tvShow.name}
+                {tvShowDetails?.name}
               </h1>
 
               {/* Meta Info */}
@@ -164,22 +170,24 @@ const TVShowDetails = ({ tvShow, onBack }) => {
               </div>
 
               <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-3xl">
-                {tvShowDetails?.overview || tvShow.overview}
+                {tvShowDetails?.overview}
               </p>
 
               {/* Action Buttons */}
               <div className="flex gap-4 mb-6">
-                <button
-                  onClick={() => {
-                    if (tvShowSeasons?.episodes?.length > 0) {
-                      handlePlayEpisode(tvShowSeasons.episodes[0]);
-                    }
-                  }}
-                  className="flex items-center gap-2 px-8 py-4 bg-white text-black text-xl font-semibold rounded hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
-                >
-                  <Play className="w-6 h-6" />
-                  Play S{selectedSeason}E1
-                </button>
+                {tvShowSeasons?.episodes?.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (tvShowSeasons?.episodes?.length > 0) {
+                        handlePlayEpisode(tvShowSeasons.episodes[0]);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-8 py-4 bg-white text-black text-xl font-semibold rounded hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Play className="w-6 h-6" />
+                    Play S{selectedSeason}E1
+                  </button>
+                )}
 
                 <button
                   onClick={handleAddToWatchlist}
@@ -286,7 +294,7 @@ const TVShowDetails = ({ tvShow, onBack }) => {
       {/* TV Show Player Modal */}
       {showPlayer && selectedEpisode && (
         <TVShowPlayer
-          tvShow={tvShowDetails || tvShow}
+          tvShow={tvShowDetails}
           episode={selectedEpisode}
           season={selectedSeason}
           onClose={() => {

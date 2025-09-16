@@ -1,25 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import Header from "./Header";
 import TVShowCard from "./TVShowCard";
-import TVShowDetails from "./TVShowDetails";
 import usePopularTVShows from "../hooks/usePopularTVShows";
 import useTopRatedTVShows from "../hooks/useTopRatedTVShows";
 import useOnTheAirTVShows from "../hooks/useOnTheAirTVShows";
 import { Radio, Flame, Star, Tv } from "../components/icons";
 
 const TVShows = () => {
-  const [selectedTVShow, setSelectedTVShow] = useState(null);
   const tvShows = useSelector((store) => store.tvShows);
 
   // Fetch TV shows data
   usePopularTVShows();
   useTopRatedTVShows();
   useOnTheAirTVShows();
-
-  const handleTVShowClick = (tvShow) => {
-    setSelectedTVShow(tvShow);
-  };
 
   const TVShowList = ({ title, shows, icon }) => {
     if (!shows || shows.length === 0) return null;
@@ -35,23 +29,12 @@ const TVShows = () => {
             <TVShowCard
               key={tvShow.id}
               tvShow={tvShow}
-              onTVShowClick={handleTVShowClick}
             />
           ))}
         </div>
       </div>
     );
   };
-
-  // If a TV show is selected, show its details page
-  if (selectedTVShow) {
-    return (
-      <TVShowDetails
-        tvShow={selectedTVShow}
-        onBack={() => setSelectedTVShow(null)}
-      />
-    );
-  }
 
   return (
     <div className="bg-black min-h-screen">

@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
-import MoviePlayer from "./MoviePlayer";
+import { useNavigate } from "react-router-dom";
 import { Star, Flame, Play, Calendar } from "../components/icons";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
-  const [selectedMovie, setSelectedMovie] = useState(null);
+  const navigate = useNavigate();
 
   if (!movies.nowPlayingMovies) return null;
 
@@ -16,7 +16,8 @@ const SecondaryContainer = () => {
       console.log(
         `Selected movie: ${movie.original_title} (TMDB ID: ${movie.id})`
       );
-      setSelectedMovie(movie);
+      // Navigate to the movie detail page
+      navigate(`/movie/${movie.id}`);
     };
 
     return (
@@ -85,22 +86,12 @@ const SecondaryContainer = () => {
   };
 
   return (
-    <>
-      <div className="relative bg-black pt-16 pb-20">
-        <MovieList title="Now Playing" movies={movies.nowPlayingMovies} icon={<Flame className="w-6 h-6 text-red-500" />} />
-        <MovieList title="Popular Movies" movies={movies.popularMovies} icon={<Play className="w-6 h-6 text-white" />} />
-        <MovieList title="Top Rated" movies={movies.topRatedMovies} icon={<Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />} />
-        <MovieList title="Upcoming" movies={movies.upcomingMovies} icon={<Calendar className="w-6 h-6 text-blue-400" />} />
-      </div>
-
-      {/* Movie Player Modal */}
-      {selectedMovie && (
-        <MoviePlayer
-          movie={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
-        />
-      )}
-    </>
+    <div className="relative bg-black pt-16 pb-20">
+      <MovieList title="Now Playing" movies={movies.nowPlayingMovies} icon={<Flame className="w-6 h-6 text-red-500" />} />
+      <MovieList title="Popular Movies" movies={movies.popularMovies} icon={<Play className="w-6 h-6 text-white" />} />
+      <MovieList title="Top Rated" movies={movies.topRatedMovies} icon={<Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />} />
+      <MovieList title="Upcoming" movies={movies.upcomingMovies} icon={<Calendar className="w-6 h-6 text-blue-400" />} />
+    </div>
   );
 };
 

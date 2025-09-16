@@ -8,6 +8,7 @@ import { Search } from "../components/icons";
 const Header = () => {
   const navigate = useNavigate();
   const user = useSelector((store) => store.user.user);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef(null);
@@ -16,6 +17,14 @@ const Header = () => {
     signOut(auth)
       .then(() => navigate("/"))
       .catch(() => navigate("/error"));
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results page
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   // Close dropdown on outside click or Esc
@@ -41,7 +50,7 @@ const Header = () => {
       <div className="h-full px-6 flex items-center">
         {/* Left: Logo (bigger) */}
         <button
-          onClick={() => navigate("/Browse")}
+          onClick={() => navigate("/")}
           className="flex items-center focus:outline-none"
           aria-label="Go to Home"
         >
@@ -57,13 +66,13 @@ const Header = () => {
 
         {/* Right: Navigation + actions (no notification) */}
         {user && (
-          <div className="flex items-center space-x-20">
+          <div className="flex items-center space-x-6">
             {/* Right-aligned navigation */}
             <nav aria-label="Primary" className="text-white">
-              <ul className="flex items-center space-x-20 text-sm md:text-base font-semibold">
+              <ul className="flex items-center space-x-6 text-sm md:text-base font-semibold">
                 <li>
                   <button
-                    onClick={() => navigate("/Browse")}
+                    onClick={() => navigate("/")}
                     className="hover:text-red-500 focus:outline-none"
                   >
                     Home
@@ -71,7 +80,7 @@ const Header = () => {
                 </li>
                 <li>
                   <button
-                    onClick={() => {}}
+                    onClick={() => navigate("/movies")}
                     className="hover:text-red-500 focus:outline-none"
                   >
                     Movies
@@ -79,7 +88,7 @@ const Header = () => {
                 </li>
                 <li>
                   <button
-                    onClick={() => navigate("/TVShows")} // Change this line
+                    onClick={() => navigate("/shows")}
                     className="hover:text-red-500 focus:outline-none"
                   >
                     Shows
@@ -96,17 +105,26 @@ const Header = () => {
               </ul>
             </nav>
 
-            {/* Search icon */}
-            <button
-              aria-label="Search"
-              className="text-white hover:text-red-500 focus:outline-none"
-              onClick={() => {}}
-            >
-              <Search className="w-6 h-6" />
-            </button>
+            {/* Search form */}
+            <form onSubmit={handleSearch} className="flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="bg-gray-800 text-white rounded-l-full py-1 px-4 focus:outline-none focus:ring-2 focus:ring-red-600 w-32 md:w-48"
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                className="bg-gray-800 hover:bg-gray-700 text-white rounded-r-full p-2 focus:outline-none"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </form>
 
             {/* Account icon + Dropdown (black, neat, modern) */}
-            <div className="relative mr-10" ref={menuRef}>
+            <div className="relative mr-4" ref={menuRef}>
               <button
                 onClick={() => setOpenMenu((s) => !s)}
                 aria-haspopup="menu"

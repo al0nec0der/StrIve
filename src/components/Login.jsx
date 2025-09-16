@@ -47,7 +47,7 @@ const Login = () => {
             // Signed in
             const user = userCredential.user;
             console.log(user);
-            Navigate("/Browse");
+            Navigate("/");
             // ...
           })
           .catch((error) => {
@@ -71,7 +71,7 @@ const Login = () => {
 
               dispatch(login({ uid: uid, email: email, name: displayName }));
               // console.log(user);
-              Navigate("/Browse");
+              Navigate("/");
             })
             .catch((error) => {
               // An error occurred

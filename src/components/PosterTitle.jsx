@@ -1,6 +1,7 @@
 // src/components/PosterTitle.jsx - UPDATED
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { addToList } from "../util/firestoreService";
 import MoviePlayer from "./MoviePlayer";
 import { Play, Plus } from "../components/icons";
@@ -9,6 +10,7 @@ const PosterTitle = ({ movie }) => {
   const user = useSelector((store) => store.user.user);
   const { id, original_title, overview, poster_path } = movie;
   const [showPlayer, setShowPlayer] = useState(false);
+  const navigate = useNavigate();
 
   const handleAddToWatchlist = async () => {
     if (!user) {
@@ -33,6 +35,10 @@ const PosterTitle = ({ movie }) => {
       console.error("Error adding to watchlist:", error);
       alert("Failed to add to watchlist. Please try again.");
     }
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/movie/${id}`);
   };
 
   const handlePlayMovie = () => {
@@ -61,6 +67,13 @@ const PosterTitle = ({ movie }) => {
             >
               <Play className="w-6 h-6" />
               Play Now
+            </button>
+            <button
+              onClick={handleViewDetails}
+              className="flex items-center gap-2 px-8 py-3 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
+            >
+              <Plus className="w-6 h-6" />
+              View Details
             </button>
             <button
               onClick={handleAddToWatchlist}

@@ -1,13 +1,17 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { IMG_CDN_URL } from "../util/constants";
 import { Star, Play, Tv } from "../components/icons";
 
-const TVShowCard = ({ tvShow, onTVShowClick }) => {
+const TVShowCard = ({ tvShow }) => {
   if (!tvShow.poster_path) return null;
+
+  const navigate = useNavigate();
 
   const handleClick = () => {
     console.log(`Selected TV Show: ${tvShow.name} (TMDB ID: ${tvShow.id})`);
-    onTVShowClick(tvShow);
+    // Navigate to the TV show detail page
+    navigate(`/tv/${tvShow.id}`);
   };
 
   return (
