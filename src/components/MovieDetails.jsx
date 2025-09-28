@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
 import Header from "./Header";
 import { Play, Plus, Star } from "lucide-react";
 import useImdbRating from "../hooks/useImdbRating";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const MovieDetails = () => {
   const { movieId } = useParams();
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const user = useSelector((store) => store.user.user);
+  const user = useRequireAuth();
   const imdbRating = useImdbRating(movieId, "movie");
 
   useEffect(() => {

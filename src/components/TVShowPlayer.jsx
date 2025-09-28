@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
 import { Star, Maximize, RotateCw, X, Lock } from "lucide-react";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [streamingUrl, setStreamingUrl] = useState("");
   const [currentServerIndex, setCurrentServerIndex] = useState(0);
   const [isAddedToWatched, setIsAddedToWatched] = useState(false);
 
-  const user = useSelector((store) => store.user.user);
+  const user = useRequireAuth();
   const iframeRef = useRef(null);
 
   // Get alternative TV streaming servers
@@ -43,13 +45,9 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   ];
 
   useEffect(() => {
+    if (!user) return; // If user is null (due to authentication redirect), don't proceed
+    
     const loadEpisodeStream = async () => {
-      if (!user) {
-        setHasError(true);
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
         setHasError(false);
@@ -68,7 +66,7 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
 
         // Auto-add to watched list after 30 seconds
         setTimeout(() => {
-          if (user && !isAddedToWatched) {
+          if (!isAddedToWatched) {
             handleAddToWatched();
           }
         }, 30000);
@@ -129,27 +127,9 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
-        <div className="bg-gray-800 p-8 rounded-lg text-center max-w-md">
-          <div className="text-green-500 mb-4">
-            <Lock className="w-16 h-16 mx-auto" />
-          </div>
-          <h2 className="text-white text-2xl mb-4">Login Required</h2>
-          <p className="text-gray-300 mb-6">
-            Please log in to watch TV shows and episodes
-          </p>
-          <button
-            onClick={onClose}
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // If user is not authenticated, the hook has already redirected
+  // If still rendering here, the user is authenticated
+  if (!user) return null; // Safety check
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-98 flex items-center justify-center z-50">

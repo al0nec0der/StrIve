@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { options, IMG_CDN_URL } from "../util/constants";
 import {
   setTVShowDetails,
@@ -12,6 +12,7 @@ import TVShowPlayer from "./TVShowPlayer";
 import Header from "./Header";
 import { ArrowLeft, Play, Plus, Star } from "lucide-react";
 import useImdbRating from "../hooks/useImdbRating";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const TVShowDetails = () => {
   const { tvId } = useParams();
@@ -22,7 +23,7 @@ const TVShowDetails = () => {
   const imdbRating = useImdbRating(tvId, "tv");
 
   const dispatch = useDispatch();
-  const user = useSelector((store) => store.user.user);
+  const user = useRequireAuth();
   const { tvShowDetails, tvShowSeasons, selectedSeason } = useSelector(
     (store) => store.tvShows
   );

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
 import {
@@ -11,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import useRequireAuth from "../hooks/useRequireAuth";
 
 const MoviePlayer = () => {
   const { movieId } = useParams();
@@ -21,7 +21,7 @@ const MoviePlayer = () => {
   const [currentServerIndex, setCurrentServerIndex] = useState(0);
   const [isAddedToWatched, setIsAddedToWatched] = useState(false);
 
-  const user = useSelector((store) => store.user.user);
+  const user = useRequireAuth();
   const iframeRef = useRef(null);
   const navigate = useNavigate();
 
@@ -52,13 +52,9 @@ const MoviePlayer = () => {
   }, [movieId]);
 
   useEffect(() => {
+    if (!user) return; // If user is null (due to authentication redirect), don't proceed
+    
     const loadMovieStream = async () => {
-      if (!user) {
-        setHasError(true);
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
         setHasError(false);
@@ -76,7 +72,7 @@ const MoviePlayer = () => {
         }, 2000);
 
         setTimeout(() => {
-          if (user && !isAddedToWatched) {
+          if (!isAddedToWatched) {
             handleAddToWatched();
           }
         }, 30000);
@@ -127,27 +123,9 @@ const MoviePlayer = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50">
-        <div className="bg-gray-800 p-8 rounded-lg text-center max-w-md">
-          <div className="text-red-500 mb-4">
-            <Lock className="w-16 h-16 mx-auto" />
-          </div>
-          <h2 className="text-white text-2xl mb-4">Login Required</h2>
-          <p className="text-gray-300 mb-6">
-            Please log in to watch movies and TV shows
-          </p>
-          <button
-            onClick={() => navigate("/login")}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold"
-          >
-            Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // If user is not authenticated, the hook has already redirected
+  // If still rendering here, the user is authenticated
+  if (!user) return null; // Safety check
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">

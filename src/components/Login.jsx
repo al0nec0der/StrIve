@@ -36,28 +36,30 @@ const Login = () => {
       return;
     }
     if (IsSignin) {
-      if (IsSignin) {
-        // console.log("Signin");
-        signInWithEmailAndPassword(
-          auth,
-          email.current.value,
-          password.current.value
-        )
-          .then((userCredential) => {
-            // Signed in
-            const user = userCredential.user;
-            console.log(user);
-            Navigate("/");
-            // ...
-          })
-          .catch((error) => {
-            // console.log(error); // log the full error
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            setErrorMsg(errorCode + " " + errorMessage);
-          });
-      }
+      // Sign in with email and password
+      signInWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          console.log(user);
+          
+          // Dispatch login action to update Redux store
+          dispatch(login({ uid: user.uid, email: user.email, name: user.displayName }));
+          
+          Navigate("/");
+        })
+        .catch((error) => {
+          // console.log(error); // log the full error
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setErrorMsg(errorCode + " " + errorMessage);
+        });
     } else {
+      // Create user account
       createUserWithEmailAndPassword(auth, emailVal, passwordVal)
         .then((userCredential) => {
           const user = userCredential.user;

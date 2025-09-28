@@ -6,13 +6,9 @@ import MoviesPage from "./MoviesPage";
 import MovieDetails from "./MovieDetails";
 import MoviePlayer from "./MoviePlayer";
 import TVShowDetails from "./TVShowDetails";
+import ProtectedRoute from "./ProtectedRoute";
 import { RouterProvider } from "react-router-dom";
 import Footer from "./Footer";
-import { useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../util/firebase";
-import { useDispatch } from "react-redux";
-import { login, logout } from "../util/userSlice";
 
 // Create simple component placeholders for Search page
 const SearchResultsPage = () => (
@@ -25,8 +21,6 @@ const SearchResultsPage = () => (
 );
 
 const Body = () => {
-  const dispatch = useDispatch();
-
   const appRouter = createBrowserRouter([
     {
       path: "/",
@@ -38,40 +32,49 @@ const Body = () => {
     },
     {
       path: "/movies",
-      element: <MoviesPage />,
+      element: (
+        <ProtectedRoute>
+          <MoviesPage />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/shows",
-      element: <TVShows />,
+      element: (
+        <ProtectedRoute>
+          <TVShows />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/search",
-      element: <SearchResultsPage />,
+      element: (
+        <ProtectedRoute>
+          <SearchResultsPage />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/movie/:movieId",
       element: <MovieDetails />,
     },
     {
-        path: "/movie/:movieId/play",
-        element: <MoviePlayer />,
-      },
-      {
-        path: "/tv/:tvId",
-        element: <TVShowDetails />,
-      },
+      path: "/movie/:movieId/play",
+      element: (
+        <ProtectedRoute>
+          <MoviePlayer />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/tv/:tvId/:season/:episode",
+      element: (
+        <ProtectedRoute>
+          <TVShowDetails />
+        </ProtectedRoute>
+      ),
+    },
   ]);
-
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const { uid, email, displayName } = user;
-        dispatch(login({ uid: uid, email: email, name: displayName }));
-      } else {
-        dispatch(logout());
-      }
-    });
-  }, []);
 
   return (
     <div>

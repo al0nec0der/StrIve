@@ -65,7 +65,7 @@ const Header = () => {
         <div className="flex-1" />
 
         {/* Right: Navigation + actions (no notification) */}
-        {user && (
+        {user ? (
           <div className="flex items-center space-x-6">
             {/* Right-aligned navigation */}
             <nav aria-label="Primary" className="text-white">
@@ -131,7 +131,7 @@ const Header = () => {
                 aria-expanded={openMenu}
                 className="w-8 h-8 rounded-full bg-gray-700 text-white font-bold text-sm flex items-center justify-center hover:ring-2 hover:ring-red-600 focus:outline-none"
               >
-                {(user?.name?.[0] || "U").toUpperCase()}
+                {(user?.name?.[0] || user?.email?.[0] || "U").toUpperCase()}
               </button>
 
               {openMenu && (
@@ -164,6 +164,65 @@ const Header = () => {
                 </div>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-6">
+            {/* Simplified navigation for non-authenticated users */}
+            <nav aria-label="Primary" className="text-white">
+              <ul className="flex items-center space-x-6 text-sm md:text-base font-semibold">
+                <li>
+                  <button
+                    onClick={() => navigate("/")}
+                    className="hover:text-red-500 focus:outline-none"
+                  >
+                    Home
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/movies")}
+                    className="hover:text-red-500 focus:outline-none"
+                  >
+                    Movies
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/shows")}
+                    className="hover:text-red-500 focus:outline-none"
+                  >
+                    Shows
+                  </button>
+                </li>
+                {/* "My Lists" button is hidden when user is not logged in */}
+              </ul>
+            </nav>
+
+            {/* Search form for non-authenticated users */}
+            <form onSubmit={handleSearch} className="flex items-center">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="bg-gray-800 text-white rounded-l-full py-1 px-4 focus:outline-none focus:ring-2 focus:ring-red-600 w-32 md:w-48"
+              />
+              <button
+                type="submit"
+                aria-label="Search"
+                className="bg-gray-800 hover:bg-gray-700 text-white rounded-r-full p-2 focus:outline-none"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </form>
+
+            {/* Login button for non-authenticated users */}
+            <button
+              onClick={() => navigate("/login")}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
+            >
+              Login
+            </button>
           </div>
         )}
       </div>
