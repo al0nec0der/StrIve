@@ -5,6 +5,7 @@ import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
 import Header from "./Header";
 import { Play, Plus, Star } from "lucide-react";
+import useImdbRating from "../hooks/useImdbRating";
 
 const MovieDetails = () => {
   const { movieId } = useParams();
@@ -12,6 +13,7 @@ const MovieDetails = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const user = useSelector((store) => store.user.user);
+  const imdbRating = useImdbRating(movieId, "movie");
 
   useEffect(() => {
     fetchMovieDetails();
@@ -123,7 +125,7 @@ const MovieDetails = () => {
               </span>
               <span className="text-white flex items-center">
                 <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
-                {movieDetails.vote_average?.toFixed(1)}/10
+                {imdbRating ? imdbRating : `${movieDetails.vote_average?.toFixed(1)}/10`}
               </span>
               <span className="text-white">
                 {Math.floor(movieDetails.runtime / 60)}h {movieDetails.runtime % 60}m

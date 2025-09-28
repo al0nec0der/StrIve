@@ -2,10 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { IMG_CDN_URL } from "../util/constants";
 import { Star, Play, Tv } from "lucide-react";
+import useImdbRating from "../hooks/useImdbRating";
 
 const TVShowCard = ({ tvShow }) => {
   if (!tvShow.poster_path) return null;
 
+  const imdbRating = useImdbRating(tvShow.id, "tv");
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -46,7 +48,7 @@ const TVShowCard = ({ tvShow }) => {
         {/* Rating badge */}
         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center">
           <Star className="w-3 h-3 mr-1 text-yellow-400 fill-yellow-400" />
-          {tvShow.vote_average?.toFixed(1)}
+          {imdbRating ? imdbRating : tvShow.vote_average?.toFixed(1)}
         </div>
       </div>
 

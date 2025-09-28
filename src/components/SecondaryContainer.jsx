@@ -2,6 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Star, Flame, Play, Calendar } from "lucide-react";
+import useImdbRating from "../hooks/useImdbRating";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
@@ -11,6 +12,8 @@ const SecondaryContainer = () => {
 
   const MovieCard = ({ movie }) => {
     if (!movie.poster_path) return null;
+
+    const imdbRating = useImdbRating(movie.id, "movie");
 
     const handleMovieClick = () => {
       console.log(
@@ -51,7 +54,7 @@ const SecondaryContainer = () => {
           {/* Rating badge */}
           <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center">
             <Star className="w-3 h-3 mr-1 text-yellow-400 fill-yellow-400" />
-            {movie.vote_average.toFixed(1)}
+            {imdbRating ? imdbRating : movie.vote_average.toFixed(1)}
           </div>
         </div>
 

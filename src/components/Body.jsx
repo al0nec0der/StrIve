@@ -7,6 +7,7 @@ import MovieDetails from "./MovieDetails";
 import MoviePlayer from "./MoviePlayer";
 import TVShowDetails from "./TVShowDetails";
 import { RouterProvider } from "react-router-dom";
+import Footer from "./Footer";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../util/firebase";
@@ -75,6 +76,7 @@ const Body = () => {
   return (
     <div>
       <RouterProvider router={appRouter} />
+      <Footer />
     </div>
   );
 };

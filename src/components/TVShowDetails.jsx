@@ -11,6 +11,7 @@ import { addToList } from "../util/firestoreService";
 import TVShowPlayer from "./TVShowPlayer";
 import Header from "./Header";
 import { ArrowLeft, Play, Plus, Star } from "lucide-react";
+import useImdbRating from "../hooks/useImdbRating";
 
 const TVShowDetails = () => {
   const { tvId } = useParams();
@@ -18,6 +19,7 @@ const TVShowDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const imdbRating = useImdbRating(tvId, "tv");
 
   const dispatch = useDispatch();
   const user = useSelector((store) => store.user.user);
@@ -159,7 +161,7 @@ const TVShowDetails = () => {
                 </span>
                 <span className="text-white flex items-center">
                   <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
-                  {tvShowDetails?.vote_average?.toFixed(1)}/10
+                  {imdbRating ? imdbRating : `${tvShowDetails?.vote_average?.toFixed(1)}/10`}
                 </span>
                 <span className="text-white">
                   {tvShowDetails?.number_of_seasons} Seasons
