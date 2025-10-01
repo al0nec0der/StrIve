@@ -72,14 +72,27 @@ export const validateOmdbEnvironment = () => {
   if (!import.meta.env.VITE_OMDB_KEY_4) missingKeys.push('VITE_OMDB_KEY_4');
   
   if (missingKeys.length > 0) {
-    console.warn(`Missing OMDb API keys in environment: ${missingKeys.join(', ')}. Using fallback keys.`);
+    // Log a more detailed warning message
+    console.warn(`\n⚠️  WARNING: Missing OMDb API keys in environment: ${missingKeys.join(', ')}. Using fallback keys.\n`);
+    console.warn(`   Please add these environment variables to your .env file or set them in your system environment.\n`);
+    console.warn(`   You can get API keys from: https://www.omdbapi.com/apikey.aspx\n`);
   }
   
   if (OMDB_API_KEYS.length === 0) {
+    // Throw a more descriptive error with instructions
     throw new Error(
-      'No OMDb API keys are configured. Please add at least one of the following environment variables: ' +
-      'VITE_OMDB_KEY_1, VITE_OMDB_KEY_2, VITE_OMDB_KEY_3, VITE_OMDB_KEY_4, VITE_OMDB_API_KEY, ' +
-      'VITE_OMDB_API_KEY2, VITE_OMDB_API_KEY3, VITE_OMDB_API_KEY4'
+      '\n❌ CRITICAL ERROR: No OMDb API keys are configured.\n' +
+      'Please add at least one of the following environment variables to your .env file:\n' +
+      '- VITE_OMDB_KEY_1\n' +
+      '- VITE_OMDB_KEY_2\n' +
+      '- VITE_OMDB_KEY_3\n' +
+      '- VITE_OMDB_KEY_4\n' +
+      '- VITE_OMDB_API_KEY\n' +
+      '- VITE_OMDB_API_KEY2\n' +
+      '- VITE_OMDB_API_KEY3\n' +
+      '- VITE_OMDB_API_KEY4\n\n' +
+      'You can get free API keys from: https://www.omdbapi.com/apikey.aspx\n' +
+      'After adding the keys, restart your development server.\n'
     );
   }
   

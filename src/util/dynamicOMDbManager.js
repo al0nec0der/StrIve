@@ -26,8 +26,10 @@ class DynamicOMDbManager {
     let keyIndex = 1;
     
     // Dynamically check for VITE_OMDB_KEY_1, VITE_OMDB_KEY_2, etc.
+    console.log("Starting to discover available OMDb API keys...");
     while (import.meta.env[`VITE_OMDB_KEY_${keyIndex}`]) {
       const keyValue = import.meta.env[`VITE_OMDB_KEY_${keyIndex}`];
+      console.log(`Discovered VITE_OMDB_KEY_${keyIndex}: ${keyValue ? 'present' : 'not present'}`);
       
       // Validation rules:
       // (a) value is truthy
@@ -37,6 +39,7 @@ class DynamicOMDbManager {
       const trimmedKey = keyValue ? keyValue.trim() : '';
       const hasPlaceholderSubstring = trimmedKey.includes('YOUR_');
       
+      console.log(`Validating key ${keyIndex}: value=${trimmedKey}, hasPlaceholder=${hasPlaceholderSubstring}`);
       if (trimmedKey && !hasPlaceholderSubstring) {
         allPossibleKeys.push({
           index: keyIndex,
@@ -46,11 +49,37 @@ class DynamicOMDbManager {
           isActive: true,
           deactivatedUntil: null  // For tracking 401 errors
         });
+        console.log(`Added key ${keyIndex} to available keys list`);
       } else {
         console.warn(`Ignoring invalid OMDb key at VITE_OMDB_KEY_${keyIndex} (format mismatch or placeholder)`);
       }
       
       keyIndex++;
+    }
+    
+    // Also check the legacy keys (VITE_OMDB_API_KEY, VITE_OMDB_API_KEY2, etc.)
+    const legacyKeys = ['VITE_OMDB_API_KEY', 'VITE_OMDB_API_KEY2', 'VITE_OMDB_API_KEY3', 'VITE_OMDB_API_KEY4'];
+    for (const legacyKey of legacyKeys) {
+      if (import.meta.env[legacyKey] && import.meta.env[legacyKey] !== 'YOUR_MAIN_OMDB_API_KEY_HERE' && 
+          import.meta.env[legacyKey] !== 'YOUR_SECOND_OMDB_API_KEY_HERE' && 
+          import.meta.env[legacyKey] !== 'YOUR_THIRD_OMDB_API_KEY_HERE' && 
+          import.meta.env[legacyKey] !== 'YOUR_FOURTH_OMDB_API_KEY_HERE') {
+        const keyValue = import.meta.env[legacyKey];
+        const trimmedKey = keyValue ? keyValue.trim() : '';
+        const hasPlaceholderSubstring = trimmedKey.includes('YOUR_');
+        
+        if (trimmedKey && !hasPlaceholderSubstring) {
+          allPossibleKeys.push({
+            index: `legacy-${legacyKey}`, // Mark as legacy
+            key: trimmedKey,
+            dailyUsage: 0,
+            maxDailyUsage: this.dailyQuota,
+            isActive: true,
+            deactivatedUntil: null  // For tracking 401 errors
+          });
+          console.log(`Added legacy key ${legacyKey} to available keys list`);
+        }
+      }
     }
     
     return allPossibleKeys;

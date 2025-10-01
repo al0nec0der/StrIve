@@ -34,17 +34,23 @@ class OmdbService {
       throw new Error(`Invalid IMDb ID format: ${imdbId}`);
     }
 
+    console.log(`[${new Date().toISOString()}] OmdbService: Starting fetch for IMDb ID ${imdbId}. Available API keys: ${OMDB_API_KEYS.length}`);
+    
     // Get the first available key (simplified approach)
     let currentApiKey;
     try {
       currentApiKey = dynamicOMDbManager.getNextActiveKey();
+      console.log(`[${new Date().toISOString()}] OmdbService: Selected active key: ${this.maskKey(currentApiKey)}`);
     } catch (error) {
+      console.error(`[${new Date().toISOString()}] OmdbService: No active keys available from dynamic manager:`, error.message);
+      
       // If no active keys available, use the first key from constants as fallback
       console.warn(`[${new Date().toISOString()}] OmdbService: No active keys available, using first key from constants`);
       currentApiKey = OMDB_API_KEYS[0];
       if (!currentApiKey) {
         throw new Error('No OMDb API keys available for request');
       }
+      console.log(`[${new Date().toISOString()}] OmdbService: Using fallback key: ${this.maskKey(currentApiKey)}`);
     }
     
     const queryParams = {
@@ -58,15 +64,22 @@ class OmdbService {
     // Log the attempt details
     const maskedKey = this.maskKey(currentApiKey);
     console.log(`[${new Date().toISOString()}] OmdbService: Attempting fetch for ${imdbId} with key ${maskedKey}`);
+    console.log(`[${new Date().toISOString()}] OmdbService: Request URL: ${url}`);
 
     try {
       // Execute request with retry logic and timeout
+      console.log(`[${new Date().toISOString()}] OmdbService: Executing request to OMDb API...`);
       const response = await this.executeRequest(url, 'fetchByImdbId', currentApiKey);
+      console.log(`[${new Date().toISOString()}] OmdbService: Received response from OMDb for ${imdbId}`);
       
       // If successful, update key usage
       dynamicOMDbManager.updateKeyUsage(currentApiKey);
       
-      return this.normalizeResponse(response);
+      console.log(`[${new Date().toISOString()}] OmdbService: Normalizing OMDb response...`);
+      const normalizedResponse = this.normalizeResponse(response);
+      console.log(`[${new Date().toISOString()}] OmdbService: OMDb response normalized successfully`);
+      
+      return normalizedResponse;
     } catch (error) {
       // If we get an error, try the next key if available
       console.error(`[${new Date().toISOString()}] OmdbService: Error fetching data for ${imdbId}:`, error.message);
@@ -97,6 +110,7 @@ class OmdbService {
       }
       
       // If all else fails, throw the original error
+      console.error(`[${new Date().toISOString()}] OmdbService: All attempts failed for ${imdbId}, throwing error:`, error.message);
       throw error;
     }
   }

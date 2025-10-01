@@ -134,31 +134,45 @@ const resolveImdbId = async (tmdbId, mediaType) => {
  */
 const fetchOmdbData = async (imdbId, primaryApiKey) => {
   console.log(`[${getTimestamp()}] fetchOmdbData: Starting fetch for IMDb ID: ${imdbId}`);
+  console.log(`[${getTimestamp()}] fetchOmdbData: Primary API key provided: ${!!primaryApiKey}`);
   
   // If a primary key is provided, try it first, then rotate through all available keys
   const keysToTry = primaryApiKey ? [primaryApiKey, ...OMDB_API_KEYS.filter(key => key !== primaryApiKey)] : OMDB_API_KEYS;
   
   console.log(`[${getTimestamp()}] fetchOmdbData: Attempting key rotation with ${keysToTry.length} keys:`, 
-    keysToTry.map(key => key.substring(0, 3) + '...'));
+    keysToTry.map(key => key ? key.substring(0, 3) + '...' : 'UNDEFINED'));
+  console.log(`[${getTimestamp()}] fetchOmdbData: All available API keys:`, OMDB_API_KEYS);
   
   let lastError;
   
   for (let i = 0; i < keysToTry.length; i++) {
     const apiKey = keysToTry[i];
-    const maskedKey = apiKey.substring(0, 3) + '...';
+    const maskedKey = apiKey ? apiKey.substring(0, 3) + '...' : 'UNDEFINED';
+    
+    console.log(`[${getTimestamp()}] fetchOmdbData: Attempt #${i+1} with API key: ${maskedKey}, key value: ${apiKey ? 'present' : 'undefined'}`);
+    
+    if (!apiKey) {
+      console.warn(`[${getTimestamp()}] fetchOmdbData: Skipping undefined API key at position ${i}`);
+      continue; // Skip undefined or null keys
+    }
     
     try {
-      console.log(`[${getTimestamp()}] fetchOmdbData: Attempt #${i+1} with API key: ${maskedKey}`);
+      console.log(`[${getTimestamp()}] fetchOmdbData: Creating OmdbService instance with key: ${maskedKey}`);
       
       const service = new OmdbService(apiKey);
-      console.log(`[${getTimestamp()}] fetchOmdbData: Created OmdbService instance with key: ${maskedKey}`);
+      console.log(`[${getTimestamp()}] fetchOmdbData: OmdbService instance created successfully with key: ${maskedKey}`);
       
+      console.log(`[${getTimestamp()}] fetchOmdbData: Calling service.fetchByImdbId for ${imdbId}...`);
       const data = await service.fetchByImdbId(imdbId);
-      console.log(`[${getTimestamp()}] fetchOmdbData: Raw OMDb API response:`, data);
+      console.log(`[${getTimestamp()}] fetchOmdbData: Received raw OMDb API response:`, JSON.stringify(data, null, 2));
       
       // Extract Rotten Tomatoes and Metacritic from Ratings array with proper checks
+      console.log(`[${getTimestamp()}] fetchOmdbData: Processing ratings from response...`);
       const rt = data.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value ?? 'N/A';
       const mcRaw = data.Ratings?.find(r => r.Source === 'Metacritic')?.Value ?? 'N/A';
+      
+      console.log(`[${getTimestamp()}] fetchOmdbData: Raw ratings values - RT: ${rt}, MC: ${mcRaw}`);
+      
       const mc = typeof mcRaw === 'string' ? mcRaw.split('/') : 'N/A';
       
       // Extract the values, defaulting to "N/A" if not found
@@ -166,7 +180,7 @@ const fetchOmdbData = async (imdbId, primaryApiKey) => {
       const rottenTomatoes = rt; 
       const metacritic = Array.isArray(mc) ? mc[0] : mcRaw; // Get just the first part if it's an array
       
-      console.log(`[${getTimestamp()}] fetchOmdbData: Ratings extraction for ${imdbId}:`);
+      console.log(`[${getTimestamp()}] fetchOmdbData: Extracted ratings before cleaning:`);
       console.log(`[${getTimestamp()}] fetchOmdbData: - IMDb Rating: ${imdbRating}`);
       console.log(`[${getTimestamp()}] fetchOmdbData: - Rotten Tomatoes: ${rottenTomatoes}`);
       console.log(`[${getTimestamp()}] fetchOmdbData: - Metacritic: ${metacritic}`);
@@ -207,10 +221,12 @@ const fetchOmdbData = async (imdbId, primaryApiKey) => {
     } catch (error) {
       lastError = error;
       console.error(`[${getTimestamp()}] fetchOmdbData: API key ${maskedKey} failed for ${imdbId}:`, error.message);
+      console.error(`[${getTimestamp()}] fetchOmdbData: Error details:`, error);
       
       // If this is the last key, throw the error
       if (i === keysToTry.length - 1) {
         console.error(`[${getTimestamp()}] fetchOmdbData: All ${keysToTry.length} API keys failed for ${imdbId}`);
+        console.error(`[${getTimestamp()}] fetchOmdbData: Final error after all attempts:`, lastError);
         throw error;
       } else {
         console.log(`[${getTimestamp()}] fetchOmdbData: Trying next key...`);
