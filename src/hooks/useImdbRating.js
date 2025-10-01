@@ -1,51 +1,100 @@
 
 import { useState, useEffect } from "react";
+import { options } from '../util/constants';
+import comprehensiveRatingService from '../util/comprehensiveRatingService';
 
-// IMPORTANT: Move this to a .env file
-const OMDb_API_KEY = "your_omdb_api_key";
-
-const useImdbRating = (tmdbId, mediaType) => {
+const useImdbRating = (tmdbId, mediaType = 'movie') => {
   const [imdbRating, setImdbRating] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchImdbRating = async () => {
+    const fetchRating = async () => {
+      console.log(`useImdbRating hook: Starting to fetch ratings for tmdbId: ${tmdbId}, mediaType: ${mediaType}`);
+      
+      if (!tmdbId) {
+        console.log("useImdbRating hook: No tmdbId provided, setting null");
+        setImdbRating(null);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      
       try {
-        // 1. Get IMDb ID from TMDb API
+        // 2. First call TMDB external_ids endpoint using existing options from constants.js
+        console.log("useImdbRating hook: Fetching TMDB external IDs...");
         const tmdbResponse = await fetch(
           `https://api.themoviedb.org/3/${mediaType}/${tmdbId}/external_ids`,
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-              Authorization:
-                "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4Y2E2MDQ4ZDM4ZjJkN2Y5Y2ZmMjU4Y2IzZGQwN2YxMyIsInN1YiI6IjY1Y2EwMWYxYmYwZjYzMDE4NTI4YjYxOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.3bAx3yP-j_30K3YxMv0C3n-Hi0hH6hr_i_n5p_gJ1YI",
-            },
-          }
+          options
         );
-        const tmdbData = await tmdbResponse.json();
-        const imdbId = tmdbData.imdb_id;
-
-        if (imdbId) {
-          // 2. Get IMDb rating from OMDb API
-          const omdbResponse = await fetch(
-            `http://www.omdbapi.com/?i=${imdbId}&apikey=${OMDb_API_KEY}`
-          );
-          const omdbData = await omdbResponse.json();
-          if (omdbData.imdbRating && omdbData.imdbRating !== "N/A") {
-            setImdbRating(omdbData.imdbRating);
-          }
+        
+        if (!tmdbResponse.ok) {
+          throw new Error(`TMDB API error: ${tmdbResponse.status}`);
         }
+        
+        const tmdbData = await tmdbResponse.json();
+        console.log("useImdbRating hook: TMDB external IDs response received:", tmdbData);
+        
+        // 3. Extract IMDb ID from TMDB response (format: "tt1234567")
+        const imdbId = tmdbData.imdb_id;
+        console.log("useImdbRating hook: Extracted IMDb ID:", imdbId);
+        
+        if (!imdbId) {
+          console.log(`useImdbRating hook: No IMDb ID found for TMDB ID: ${tmdbId}`);
+          setImdbRating(null);
+          setIsLoading(false);
+          return;
+        }
+
+        // 4. Call fixed comprehensiveRatingService with the IMDb ID
+        console.log("useImdbRating hook: Calling comprehensiveRatingService...");
+        const ratingData = await comprehensiveRatingService.fetchComprehensiveRatings(
+          tmdbId,
+          mediaType,
+          import.meta.env.VITE_OMDB_KEY_1
+        );
+        
+        console.log("useImdbRating hook: Comprehensive rating data received:", ratingData);
+        
+        // 5. Return object with the requested structure
+        const formattedRatingData = {
+          imdbRating: ratingData.imdbRating,
+          imdbVotes: ratingData.imdbVotes,
+          rottenTomatoes: ratingData.rottenTomatoesRating,
+          metacritic: ratingData.metacriticRating,
+          source: ratingData.source
+        };
+        
+        console.log("useImdbRating hook: Setting formatted rating data:", formattedRatingData);
+        setImdbRating(formattedRatingData);
+
+        // 8. Cache successful results in component state to avoid re-fetching
+        // The state itself acts as a cache, and useEffect will only re-run when tmdbId changes
       } catch (error) {
-        console.error("Error fetching IMDb rating:", error);
+        console.error("useImdbRating hook: Error fetching ratings:", error);
+        // 7. Handle error states
+        setError(error.message);
+        setImdbRating(null);
+      } finally {
+        // 7. Handle loading states
+        setIsLoading(false);
       }
     };
 
-    if (tmdbId) {
-      fetchImdbRating();
-    }
-  }, [tmdbId, mediaType]);
+    fetchRating();
+  }, [tmdbId, mediaType]); // 6. Handle the useEffect dependency correctly (like movieID dependency in useMovieTrailer.js)
 
-  return imdbRating;
+  // 5. Return object with the requested structure
+  return {
+    imdbRating: imdbRating?.imdbRating || null,
+    imdbVotes: imdbRating?.imdbVotes || null,
+    rottenTomatoes: imdbRating?.rottenTomatoes || null,
+    metacritic: imdbRating?.metacritic || null,
+    source: imdbRating?.source || null,
+    isLoading,
+    error
+  };
 };
 
 export default useImdbRating;

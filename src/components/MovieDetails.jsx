@@ -3,17 +3,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
 import Header from "./Header";
-import { Play, Plus, Star } from "lucide-react";
+import { Play, Plus, Star, RotateCcw } from "lucide-react";
 import useImdbRating from "../hooks/useImdbRating";
 import useRequireAuth from "../hooks/useRequireAuth";
+import comprehensiveRatingService from "../util/comprehensiveRatingService";
 
 const MovieDetails = () => {
   const { movieId } = useParams();
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [comprehensiveRating, setComprehensiveRating] = useState(null);
+  const [ratingLoading, setRatingLoading] = useState(false);
   const navigate = useNavigate();
   const user = useRequireAuth();
-  const imdbRating = useImdbRating(movieId, "movie");
+  
+  // Legacy useImdbRating hook kept for potential fallback functionality (not currently used)
+  // const { ratingData, loading: legacyRatingLoading, error: ratingError, refresh: refreshRating } = useImdbRating(movieId, "movie");
 
   useEffect(() => {
     fetchMovieDetails();
@@ -28,10 +34,40 @@ const MovieDetails = () => {
       );
       const data = await response.json();
       setMovieDetails(data);
+      
+      // Fetch comprehensive ratings after getting movie details
+      await fetchComprehensiveRatings(data);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching movie details:", error);
       setLoading(false);
+    }
+  };
+
+  const fetchComprehensiveRatings = async (movieData) => {
+    setRatingLoading(true);
+    try {
+      console.log(`[${new Date().toISOString()}] MovieDetails: Starting fetchComprehensiveRatings for movieId: ${movieId}`);
+      const ratingData = await comprehensiveRatingService.fetchComprehensiveRatings(
+        movieId,
+        "movie",
+        import.meta.env.VITE_OMDB_KEY_1
+      );
+      console.log(`[${new Date().toISOString()}] MovieDetails: Received ratingData:`, ratingData);
+      setComprehensiveRating(ratingData);
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] MovieDetails: Error fetching comprehensive ratings:`, error);
+      // Set an error state to display to the user
+      setComprehensiveRating({
+        source: 'error',
+        error: error.message,
+        imdbRating: 'N/A',
+        rottenTomatoesRating: 'N/A',
+        metacriticRating: 'N/A',
+        tmdbRating: movieData?.vote_average?.toFixed(1) || 'N/A'
+      });
+    } finally {
+      setRatingLoading(false);
     }
   };
 
@@ -68,6 +104,36 @@ const MovieDetails = () => {
       alert("Failed to add to watchlist. Please try again.");
     }
   };
+
+  const handleRefreshRating = async () => {
+    setRefreshing(true);
+    try {
+      if (movieDetails) {
+        const ratingData = await comprehensiveRatingService.refreshCache(
+          movieId,
+          "movie",
+          import.meta.env.VITE_OMDB_API_KEY
+        );
+        setComprehensiveRating(ratingData);
+      }
+    } catch (error) {
+      console.error("Error refreshing ratings:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Use comprehensive rating data
+  const {
+    imdbRating,
+    rottenTomatoesRating,
+    metacriticRating,
+    awards,
+    source = "tmdb",
+    imdbVotes,
+    tmdbRating,
+    tmdbVoteCount
+  } = comprehensiveRating || {};
 
   if (loading) {
     return (
@@ -118,14 +184,97 @@ const MovieDetails = () => {
               {movieDetails.title}
             </h1>
 
+            {/* Comprehensive Rating Section */}
+            <div className="mb-6">
+              {/* Show error message if there was an error */}
+              {comprehensiveRating?.source === 'error' && (
+                <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                  <p className="text-red-200 font-medium">Rating Service Error: {comprehensiveRating.error}</p>
+                  <p className="text-red-300 text-sm mt-1">Displaying limited data from TMDB only</p>
+                </div>
+              )}
+              
+              {/* Rating Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                {/* TMDB Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">TMDB</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {comprehensiveRating?.tmdbRating || movieDetails.vote_average?.toFixed(1) || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {comprehensiveRating?.tmdbVoteCount ? `${comprehensiveRating.tmdbVoteCount} votes` : 'User Rating'}
+                  </div>
+                </div>
+                
+                {/* IMDb Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">IMDb</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {comprehensiveRating?.imdbRating || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {comprehensiveRating?.imdbVotes || 'No votes'}
+                  </div>
+                </div>
+                
+                {/* Rotten Tomatoes Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Rotten Tomatoes</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {comprehensiveRating?.rottenTomatoesRating || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {comprehensiveRating?.source === 'omdb' ? 'Verified' : 'TMDB fallback'}
+                  </div>
+                </div>
+                
+                {/* Metacritic Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Metacritic</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {comprehensiveRating?.metacriticRating || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {comprehensiveRating?.source === 'omdb' ? 'Verified' : 'TMDB fallback'}
+                  </div>
+                </div>
+                
+                {/* Source Indicator */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">Data Source</div>
+                  <div className="text-lg font-bold text-white mt-1">
+                    {comprehensiveRating?.source === 'omdb' ? 'OMDb' : 
+                     comprehensiveRating?.source === 'cache' ? 'Cache' : 
+                     comprehensiveRating?.source === 'error' ? 'Error' : 'TMDB'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {comprehensiveRating?.source === 'omdb' ? 'Full Data' : 'Limited Data'}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Refresh All Ratings Button */}
+              <div className="mt-2 flex justify-center">
+                <button 
+                  onClick={handleRefreshRating}
+                  disabled={refreshing}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                    refreshing 
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  } transition-colors`}
+                >
+                  <RotateCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh All Ratings
+                </button>
+              </div>
+            </div>
+
             {/* Meta Info */}
             <div className="flex items-center gap-6 mb-6 text-lg">
               <span className="text-red-400 font-semibold">
                 {movieDetails.release_date?.split("-")[0]}
-              </span>
-              <span className="text-white flex items-center">
-                <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
-                {imdbRating ? imdbRating : `${movieDetails.vote_average?.toFixed(1)}/10`}
               </span>
               <span className="text-white">
                 {Math.floor(movieDetails.runtime / 60)}h {movieDetails.runtime % 60}m
@@ -136,6 +285,13 @@ const MovieDetails = () => {
                 </span>
               )}
             </div>
+
+            {/* Awards */}
+            {awards && awards !== "N/A" && (
+              <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-800 rounded-lg">
+                <p className="text-yellow-200 font-medium">Awards: {awards}</p>
+              </div>
+            )}
 
             <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-3xl">
               {movieDetails.overview}

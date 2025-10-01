@@ -10,7 +10,12 @@ const MovieList = ({ title, movies }) => {
           {/* We loop through the 'movies' array to create a MovieCard for each one. */}
           {movies?.map((movie) => (
             // THE FIX: We add the unique 'key' prop using movie.id.
-            <MovieCard key={movie.id} posterPath={movie.poster_path} />
+            <MovieCard 
+              key={movie.id} 
+              posterPath={movie.poster_path} 
+              movieId={movie.id} 
+              voteAverage={movie.vote_average}
+            />
           ))}
         </div>
       </div>
