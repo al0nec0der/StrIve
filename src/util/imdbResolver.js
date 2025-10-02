@@ -33,8 +33,7 @@ function isCacheValid(cachedItem) {
     return false;
   }
   
-  const now = Date.now();
-  return (now - cachedItem.timestamp) < CACHE_DURATION;
+  return (Date.now() - cachedItem.timestamp) < CACHE_DURATION;
 }
 
 /**
@@ -181,7 +180,6 @@ export const batchGetImdbIds = async (tmdbIdsArray) => {
  * Clear expired cache entries
  */
 export const clearExpiredCache = () => {
-  const now = Date.now();
   const keysToRemove = [];
 
   for (let i = 0; i < localStorage.length; i++) {
@@ -192,7 +190,7 @@ export const clearExpiredCache = () => {
         if (!isCacheValid(cachedItem)) {
           keysToRemove.push(key);
         }
-      } catch (e) {
+      } catch (error) {  // eslint-disable-line no-unused-vars
         // If we can't parse the cached item, remove it
         keysToRemove.push(key);
       }
@@ -249,7 +247,7 @@ export const getCacheStatistics = () => {
         } else {
           expired++;
         }
-      } catch (e) {
+      } catch (error) {  // eslint-disable-line no-unused-vars
         expired++; // Treat unparsable items as expired
       }
     }

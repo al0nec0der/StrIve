@@ -12,7 +12,7 @@ const TVShowCard = ({ tvShow }) => {
   const handleClick = () => {
     console.log(`Selected TV Show: ${tvShow.name} (TMDB ID: ${tvShow.id})`);
     // Navigate to the TV show detail page
-    navigate(`/tv/${tvShow.id}`);
+    navigate(`/shows/${tvShow.id}`);
   };
 
   return (

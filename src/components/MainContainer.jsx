@@ -11,7 +11,7 @@ const MainContainer = () => {
   if (!movies || movies.length === 0) return null;
 
   const movie = movies[Math.floor(Math.random() * movies.length)];
-  const { original_title, overview, id } = movie;
+  const { id } = movie;
 
   // Function to navigate to movie details
   const handleViewDetails = () => {

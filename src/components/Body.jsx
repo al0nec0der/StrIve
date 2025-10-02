@@ -67,6 +67,14 @@ const Body = () => {
       ),
     },
     {
+      path: "/shows/:tvId",
+      element: (
+        <ProtectedRoute>
+          <TVShowDetails />
+        </ProtectedRoute>
+      ),
+    },
+    {
       path: "/tv/:tvId/:season/:episode",
       element: (
         <ProtectedRoute>

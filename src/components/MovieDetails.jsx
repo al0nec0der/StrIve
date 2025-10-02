@@ -5,6 +5,19 @@ import { addToList } from "../util/firestoreService";
 import Header from "./Header";
 import { Play, Plus, Star, RotateCcw } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";
+import useImdbTitle from "../hooks/useImdbTitle";
+
+// Helper function to format large numbers
+const formatCount = (num) => {
+  if (num === null || num === undefined) return 'N/A';
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num.toString();
+};
 
 const MovieDetails = () => {
   const { movieId } = useParams();
@@ -13,6 +26,9 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const user = useRequireAuth();
   
+  // Get IMDb data for this movie using the new hook
+  const { data: imdbData, loading: imdbLoading, error: imdbError } = useImdbTitle(movieId, "movie");
+
   const fetchMovieDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -32,8 +48,6 @@ const MovieDetails = () => {
   useEffect(() => {
     fetchMovieDetails();
   }, [fetchMovieDetails]);
-
-
 
   const handlePlayMovie = () => {
     if (!user) {
@@ -68,11 +82,6 @@ const MovieDetails = () => {
       alert("Failed to add to watchlist. Please try again.");
     }
   };
-
-
-
-  // Use comprehensive rating data
-  // Destructured variables removed - using comprehensiveRating properties directly in JSX
 
   if (loading) {
     return (
@@ -123,7 +132,41 @@ const MovieDetails = () => {
               {movieDetails.title}
             </h1>
 
-
+            {/* Rating Section with Progressive Loading */}
+            <div className="mb-6">
+              {/* Multi-source Rating Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                {/* TMDB Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">TMDB</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {movieDetails.vote_average?.toFixed(1) || 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {movieDetails.vote_count ? `${formatCount(movieDetails.vote_count)} votes` : 'User Rating'}
+                  </div>
+                </div>
+                
+                {/* IMDb Rating Card */}
+                <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-3 text-center">
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">IMDb</div>
+                  <div className="text-xl font-bold text-white mt-1">
+                    {imdbLoading ? (
+                      <div className="h-6 w-8 bg-gray-600 rounded-full animate-pulse mx-auto"></div>
+                    ) : imdbData && imdbData.rating && imdbData.rating.aggregateRating ? (
+                      imdbData.rating.aggregateRating
+                    ) : (
+                      'N/A'
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {imdbData && imdbData.rating && imdbData.rating.voteCount ? 
+                      `${formatCount(imdbData.rating.voteCount)} votes` : 
+                      imdbLoading ? 'Loading...' : 'N/A votes'}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Meta Info */}
             <div className="flex items-center gap-6 mb-6 text-lg">
@@ -139,8 +182,6 @@ const MovieDetails = () => {
                 </span>
               )}
             </div>
-
-
 
             <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-3xl">
               {movieDetails.overview}

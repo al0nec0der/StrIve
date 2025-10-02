@@ -11,8 +11,20 @@ import { addToList } from "../util/firestoreService";
 import TVShowPlayer from "./TVShowPlayer";
 import Header from "./Header";
 import { ArrowLeft, Play, Plus, Star } from "lucide-react";
-import useImdbRating from "../hooks/useImdbRating";
+import useImdbTitle from "../hooks/useImdbTitle";
 import useRequireAuth from "../hooks/useRequireAuth";
+
+// Helper function to format large numbers
+const formatCount = (num) => {
+  if (num === null || num === undefined) return 'N/A';
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num.toString();
+};
 
 const TVShowDetails = () => {
   const { tvId } = useParams();
@@ -20,13 +32,15 @@ const TVShowDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const imdbRating = useImdbRating(tvId, "tv");
 
   const dispatch = useDispatch();
   const user = useRequireAuth();
   const { tvShowDetails, tvShowSeasons, selectedSeason } = useSelector(
     (store) => store.tvShows
   );
+  
+  // Get IMDb data for this TV show using the new hook
+  const { data: imdbData, loading: imdbLoading, error: imdbError } = useImdbTitle(tvId, "tv");
 
   useEffect(() => {
     fetchTVShowDetails();
@@ -155,14 +169,72 @@ const TVShowDetails = () => {
                 {tvShowDetails?.name}
               </h1>
 
+              {/* Rating Section with Progressive Loading */}
+              <div className="mb-4">
+                {/* Multi-source Rating Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2 mb-2">
+                  {/* TMDB Rating Card */}
+                  <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-2 text-center">
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">TMDB</div>
+                    <div className="text-lg font-bold text-white">
+                      {tvShowDetails.vote_average?.toFixed(1) || 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {tvShowDetails.vote_count ? `${formatCount(tvShowDetails.vote_count)} votes` : 'User Rating'}
+                    </div>
+                  </div>
+                  
+                  {/* IMDb Rating Card */}
+                  <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-2 text-center">
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">IMDb</div>
+                    <div className="text-lg font-bold text-white">
+                      {imdbLoading ? (
+                        <div className="h-5 w-6 bg-gray-600 rounded-full animate-pulse mx-auto"></div>
+                      ) : imdbData && imdbData.rating && imdbData.rating.aggregateRating ? (
+                        imdbData.rating.aggregateRating
+                      ) : (
+                        'N/A'
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {imdbData && imdbData.rating && imdbData.rating.voteCount ? 
+                        `${formatCount(imdbData.rating.voteCount)} votes` : 
+                        imdbLoading ? 'Loading...' : 'N/A votes'}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Main Rating Display */}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-lg px-4 py-2">
+                    <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
+                    {imdbLoading ? (
+                      // Show skeleton loader when loading
+                      <div className="h-5 w-8 bg-gray-600 rounded-full animate-pulse"></div>
+                    ) : imdbData && imdbData.rating && imdbData.rating.aggregateRating ? (
+                      // Show IMDb rating when data is available
+                      <span>{imdbData.rating.aggregateRating}/10</span>
+                    ) : imdbError || (!imdbData && !imdbLoading) ? (
+                      // Show TMDB rating as fallback when there's an error or no data
+                      <span>{tvShowDetails?.vote_average?.toFixed(1)}/10</span>
+                    ) : (
+                      // Default to TMDB rating while loading
+                      <span>{tvShowDetails?.vote_average?.toFixed(1)}/10</span>
+                    )}
+                  </div>
+                  
+                  {imdbData && imdbData.rating && imdbData.rating.voteCount && (
+                    <div className="text-gray-300 text-sm bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg px-3 py-1">
+                      {formatCount(imdbData.rating.voteCount)} votes
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Meta Info */}
               <div className="flex items-center gap-6 mb-6 text-lg">
                 <span className="text-green-400 font-semibold">
                   {tvShowDetails?.first_air_date?.split("-")[0]}
-                </span>
-                <span className="text-white flex items-center">
-                  <Star className="w-5 h-5 mr-1 text-yellow-400 fill-yellow-400" />
-                  {imdbRating ? imdbRating : `${tvShowDetails?.vote_average?.toFixed(1)}/10`}
                 </span>
                 <span className="text-white">
                   {tvShowDetails?.number_of_seasons} Seasons
@@ -226,7 +298,9 @@ const TVShowDetails = () => {
               <h2 className="text-white text-2xl font-bold mb-4">Seasons</h2>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {tvShowDetails.seasons
-                  .filter((season) => season.season_number >= 0)
+                  .filter((season) => season.season_number > 0 || 
+                                season.name.toLowerCase() === 'specials' || 
+                                season.name.toLowerCase() === 'extras')
                   .map((season) => (
                     <button
                       key={season.id}
@@ -237,7 +311,7 @@ const TVShowDetails = () => {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       }`}
                     >
-                      Season {season.season_number}
+                      {season.name} {season.season_number > 0 ? `S${season.season_number}` : ''}
                     </button>
                   ))}
               </div>
