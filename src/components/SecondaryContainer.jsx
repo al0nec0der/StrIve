@@ -2,15 +2,15 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Star, Flame, Play, Calendar, RotateCcw } from "lucide-react";
-// import { enhancedBulkRatingProcessor } from "../util/bulkRatingProcessor";
+import { batchGetRatingsWithCache } from "../util/cacheManager";
 
 // Import actions to update Redux state with ratings
-// import { updateRatings } from "../util/moviesSlice";
+import { updateRatings } from "../util/moviesSlice";
 import MovieCard from "./MovieCard";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
-  // const dispatch = useDispatch(); // Currently unused
+  const dispatch = useDispatch();
   // const navigate = useNavigate(); // Currently unused
   
   // State for bulk processing
@@ -36,37 +36,90 @@ const SecondaryContainer = () => {
 
   // Function to process ratings for all visible movies
   const processBulkRatings = async () => {
-    // Temporary stub implementation - bulk rating processor is commented out
-    console.log("Bulk rating processing temporarily disabled");
+    if (!allMovies || allMovies.length === 0) {
+      console.log("No movies to process ratings for");
+      return;
+    }
+
+    const omdbApiKey = import.meta.env.VITE_OMDB_KEY_1;
+
+    if (!omdbApiKey) {
+      console.error("OMDB API key is missing");
+      setBulkProcessingStatus({
+        isProcessing: false,
+        progress: 0,
+        total: allMovies.length,
+        message: "OMDB API key is required for ratings"
+      });
+      return;
+    }
+
     setBulkProcessingStatus({
       isProcessing: true,
       progress: 0,
       total: allMovies.length,
-      message: "Bulk processing temporarily disabled for stability"
+      message: "Fetching ratings..."
     });
-    
-    // Simulate processing completion after a short delay
-    setTimeout(() => {
+
+    try {
+      // Extract unique movie IDs from all movie lists
+      const movieIds = allMovies.map(movie => movie.id);
+      
+      // Process ratings in chunks to manage API rate limits
+      const chunkSize = 10;
+      const chunks = [];
+      for (let i = 0; i < movieIds.length; i += chunkSize) {
+        chunks.push(movieIds.slice(i, i + chunkSize));
+      }
+      
+      let processedRatings = {};
+      let processedCount = 0;
+      
+      for (const chunk of chunks) {
+        const chunkRatings = await batchGetRatingsWithCache(chunk, 'movie', omdbApiKey);
+        processedRatings = { ...processedRatings, ...chunkRatings };
+        
+        processedCount += chunk.length;
+        setBulkProcessingStatus(prev => ({
+          ...prev,
+          progress: processedCount,
+          message: `Processed ${processedCount} of ${allMovies.length} movies...`
+        }));
+        
+        // Small delay to avoid hitting API rate limits
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Update Redux store with the new ratings
+      dispatch(updateRatings(processedRatings));
+
       setBulkProcessingStatus({
         isProcessing: false,
         progress: allMovies.length,
         total: allMovies.length,
-        message: "Bulk processing temporarily disabled for stability"
+        message: `Successfully updated ratings for ${allMovies.length} movies`
       });
-    }, 500);
+    } catch (error) {
+      console.error("Error processing bulk ratings:", error);
+      setBulkProcessingStatus({
+        isProcessing: false,
+        progress: 0,
+        total: allMovies.length,
+        message: `Error: ${error.message}`
+      });
+    }
   };
 
   // Check if we need to process ratings for the current movies
   useEffect(() => {
-    // Temporarily disabled bulk processing to maintain app stability
-    // if (!bulkProcessingStatus.isProcessing && allMovies && allMovies.length > 0) {
-    //   // Process ratings in batches when component mounts or movies change
-    //   const timer = setTimeout(() => {
-    //     processBulkRatings();
-    //   }, 1000); // Small delay to let the UI render first
+    if (!bulkProcessingStatus.isProcessing && allMovies && allMovies.length > 0) {
+      // Process ratings in batches when component mounts or movies change
+      const timer = setTimeout(() => {
+        processBulkRatings();
+      }, 1000); // Small delay to let the UI render first
 
-    //   return () => clearTimeout(timer);
-    // }
+      return () => clearTimeout(timer);
+    }
   }, [allMovies, processBulkRatings]); // Re-run when movies change
 
   if (!movies.nowPlayingMovies) return null;

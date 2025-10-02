@@ -8,7 +8,6 @@ const moviesSlice = createSlice({
     topRatedMovies: null,
     upcomingMovies: null,
     trailer: null, // <-- This was missing
-    ratings: {}, // Add ratings property to store movie ratings
   },
   reducers: {
     addNowPlayingMovies: (state, action) => {
@@ -27,14 +26,6 @@ const moviesSlice = createSlice({
     addtrailer: (state, action) => {
       state.trailer = action.payload;
     },
-    // Add reducer to update ratings
-    updateRatings: (state, action) => {
-      // action.payload should be an object with tmdbId as key and ratingData as value
-      state.ratings = {
-        ...state.ratings,
-        ...action.payload
-      };
-    },
   },
 });
 
@@ -45,7 +36,6 @@ export const {
   addTopRatedMovies,
   addUpcomingMovies,
   addtrailer, // <-- This was missing
-  updateRatings, // Export the new action
 } = moviesSlice.actions;
 
 export default moviesSlice.reducer;

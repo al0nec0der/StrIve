@@ -1,16 +1,10 @@
 import React from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Star, Play } from "lucide-react";
 
 // Define MovieCard component outside of SecondaryContainer to avoid conditional hook calls
 const MovieCard = ({ movie }) => {
   const navigate = useNavigate();
-  // Get rating data from Redux store (enhanced by bulk processor)
-  const ratings = useSelector((state) => state.movies.ratings);
-  const ratingData = ratings?.[movie.id];
-  const { imdbRating, rottenTomatoesRating, metacriticRating, source } =
-    ratingData || {};
 
   // If a movie has no poster, we won't render anything for it.
   if (!movie.poster_path || movie.poster_path.trim() === '') return null;
@@ -21,33 +15,6 @@ const MovieCard = ({ movie }) => {
     );
     // Navigate to the movie detail page
     navigate(`/movie/${movie.id}`);
-  };
-
-  // Function to get rating badge with styling
-  const getRatingBadge = (rating, sourceName, colorClass) => {
-    if (!rating || rating === "N/A") return null;
-    // Clean the rating to extract numeric value for display
-    let displayRating = rating;
-    if (sourceName === "RT") {
-      // Extract percentage (e.g., "95%" -> "95")
-      displayRating = rating.replace("%", "");
-    } else if (sourceName === "MC") {
-      // Extract score out of 100 (e.g., "82/100" -> "82")
-      const match = rating.match(/^(\d+)\/\d+/);
-      displayRating = match ? match[1] : rating;
-    } else if (sourceName === "IMDb") {
-      // Extract rating out of 10 (e.g., "8.0/10" -> "8.0")
-      const match = rating.match(/^(\d+\.?\d*)\/\d+/);
-      displayRating = match ? match[1] : rating;
-    }
-    return (
-      <div
-        className={`flex items-center px-1.5 py-0.5 rounded text-xs ${colorClass} bg-opacity-20`}
-      >
-        <span className="font-bold mr-1">{sourceName}:</span>
-        <span>{displayRating}</span>
-      </div>
-    );
   };
 
   return (
@@ -78,37 +45,13 @@ const MovieCard = ({ movie }) => {
           </div>
         </div>
 
-        {/* Multi-source Rating badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {imdbRating && getRatingBadge(imdbRating, "IMDb", "bg-yellow-500")}
-          {rottenTomatoesRating &&
-            getRatingBadge(rottenTomatoesRating, "RT", "bg-red-500")}
-          {metacriticRating &&
-            getRatingBadge(metacriticRating, "MC", "bg-green-500")}
-
-          {/* Fallback to TMDB rating if no OMDb ratings available */}
-          {!imdbRating && !rottenTomatoesRating && !metacriticRating && (
-            <div className="flex items-center px-2 py-1 bg-blue-500 bg-opacity-30 rounded text-xs">
-              <Star className="w-3 h-3 mr-1 text-blue-300 fill-blue-300" />
-              <span>{movie.vote_average?.toFixed(1)}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Source indicator */}
-        {source && (
-          <div className="absolute bottom-2 left-2">
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                source === "cache" || source === "omdb"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-500 text-white"
-              }`}
-            >
-              {source === "cache" || source === "omdb" ? "OMDb" : "TMDB"}
-            </span>
+        {/* TMDB Rating Badge */}
+        <div className="absolute top-2 left-2">
+          <div className="flex items-center px-2 py-1 bg-blue-500 bg-opacity-30 rounded text-xs">
+            <Star className="w-3 h-3 mr-1 text-blue-300 fill-blue-300" />
+            <span>{movie.vote_average?.toFixed(1)}</span>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="mt-2">
