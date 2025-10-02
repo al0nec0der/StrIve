@@ -137,11 +137,12 @@ const fetchOmdbData = async (imdbId, primaryApiKey) => {
   console.log(`[${getTimestamp()}] fetchOmdbData: Primary API key provided: ${!!primaryApiKey}`);
   
   // If a primary key is provided, try it first, then rotate through all available keys
-  const keysToTry = primaryApiKey ? [primaryApiKey, ...OMDB_API_KEYS.filter(key => key !== primaryApiKey)] : OMDB_API_KEYS;
+  const omdbKeys = OMDB_API_KEYS || []; // Handle case where OMDB_API_KEYS is not defined
+  const keysToTry = primaryApiKey ? [primaryApiKey, ...omdbKeys.filter(key => key !== primaryApiKey)] : omdbKeys;
   
   console.log(`[${getTimestamp()}] fetchOmdbData: Attempting key rotation with ${keysToTry.length} keys:`, 
     keysToTry.map(key => key ? key.substring(0, 3) + '...' : 'UNDEFINED'));
-  console.log(`[${getTimestamp()}] fetchOmdbData: All available API keys:`, OMDB_API_KEYS);
+  console.log(`[${getTimestamp()}] fetchOmdbData: All available API keys:`, OMDB_API_KEYS || []);
   
   let lastError;
   
@@ -436,13 +437,13 @@ const fetchComprehensiveRatings = async (tmdbId, mediaType = 'movie', omdbApiKey
     if (imdbId) {
       console.log(`[${getTimestamp()}] fetchComprehensiveRatings: Step 4 - IMDb ID found, attempting OMDb API call`);
       // Use the provided API key or the first available key from constants
-      const effectiveApiKey = omdbApiKey || (OMDB_API_KEYS.length > 0 ? OMDB_API_KEYS[0] : null);
+      const effectiveApiKey = omdbApiKey || (OMDB_API_KEYS && OMDB_API_KEYS.length > 0 ? OMDB_API_KEYS[0] : null);
       
-      if (effectiveApiKey || OMDB_API_KEYS.length > 0) {
+      if (effectiveApiKey || (OMDB_API_KEYS && OMDB_API_KEYS.length > 0)) {
         console.log(`[${getTimestamp()}] fetchComprehensiveRatings: Attempting OMDb fetch for IMDb ID ${imdbId} with effective API key: ${effectiveApiKey?.substring(0, 3) || 'first available key'}`);
         try {
           // If no primary key was provided, use the first available key
-          const primaryApiKey = effectiveApiKey || OMDB_API_KEYS[0];
+          const primaryApiKey = effectiveApiKey || (OMDB_API_KEYS && OMDB_API_KEYS.length > 0 ? OMDB_API_KEYS[0] : null);
           const omdbData = await fetchOmdbData(imdbId, primaryApiKey);
           console.log(`[${getTimestamp()}] fetchComprehensiveRatings: OMDb data received:`, omdbData);
           

@@ -5,15 +5,16 @@
 
 // Import the constants if needed
 import { OMDB_CONFIG } from './omdbConstants';
-import { options } from './constants'; // Your existing constants
+import { options, OMDB_API_KEYS } from './constants'; // Your existing constants - added OMDB_API_KEYS
 import dynamicOMDbManager from './dynamicOMDbManager'; // Import the dynamic key manager
 
 // For timeout handling
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 
 class OmdbService {
-  constructor(timeout = DEFAULT_TIMEOUT) {
-    // Use dynamic key management instead of a single API key
+  constructor(apiKey, timeout = DEFAULT_TIMEOUT) {
+    // When created with a specific API key, store it for use
+    this.apiKey = apiKey;
     this.timeout = timeout;
     this.baseURL = OMDB_CONFIG.BASE_URL || 'https://www.omdbapi.com';  // Also update to https
   }
@@ -34,23 +35,33 @@ class OmdbService {
       throw new Error(`Invalid IMDb ID format: ${imdbId}`);
     }
 
-    console.log(`[${new Date().toISOString()}] OmdbService: Starting fetch for IMDb ID ${imdbId}. Available API keys: ${OMDB_API_KEYS.length}`);
+    console.log(`[${new Date().toISOString()}] OmdbService: Starting fetch for IMDb ID ${imdbId}. Using API key passed to constructor: ${!!this.apiKey}`);
     
-    // Get the first available key (simplified approach)
-    let currentApiKey;
-    try {
-      currentApiKey = dynamicOMDbManager.getNextActiveKey();
-      console.log(`[${new Date().toISOString()}] OmdbService: Selected active key: ${this.maskKey(currentApiKey)}`);
-    } catch (error) {
-      console.error(`[${new Date().toISOString()}] OmdbService: No active keys available from dynamic manager:`, error.message);
-      
-      // If no active keys available, use the first key from constants as fallback
-      console.warn(`[${new Date().toISOString()}] OmdbService: No active keys available, using first key from constants`);
-      currentApiKey = OMDB_API_KEYS[0];
-      if (!currentApiKey) {
-        throw new Error('No OMDb API keys available for request');
+    // Use the API key passed to the constructor if available
+    let currentApiKey = this.apiKey;
+    
+    if (!currentApiKey) {
+      // If no API key was passed to constructor, try to get from dynamic manager
+      try {
+        currentApiKey = dynamicOMDbManager.getNextActiveKey();
+        console.log(`[${new Date().toISOString()}] OmdbService: Selected active key from dynamic manager: ${this.maskKey(currentApiKey)}`);
+      } catch (error) {
+        console.error(`[${new Date().toISOString()}] OmdbService: No active keys available from dynamic manager:`, error.message);
+        
+        // If no active keys available, use the first key from constants as fallback
+        console.warn(`[${new Date().toISOString()}] OmdbService: No active keys available, using first key from constants`);
+        currentApiKey = OMDB_API_KEYS && OMDB_API_KEYS.length > 0 ? OMDB_API_KEYS[0] : null;
+        if (!currentApiKey) {
+          throw new Error('No OMDb API keys available for request');
+        }
+        console.log(`[${new Date().toISOString()}] OmdbService: Using fallback key: ${this.maskKey(currentApiKey)}`);
       }
-      console.log(`[${new Date().toISOString()}] OmdbService: Using fallback key: ${this.maskKey(currentApiKey)}`);
+    }
+    
+    if (currentApiKey) {
+      console.log(`[${new Date().toISOString()}] OmdbService: Using API key: ${this.maskKey(currentApiKey)}`);
+    } else {
+      throw new Error('No OMDb API key available for request');
     }
     
     const queryParams = {

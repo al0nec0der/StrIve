@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
 import Header from "./Header";
 import { Play, Plus, Star, RotateCcw } from "lucide-react";
-import useImdbRating from "../hooks/useImdbRating";
 import useRequireAuth from "../hooks/useRequireAuth";
 import comprehensiveRatingService from "../util/comprehensiveRatingService";
 
@@ -18,14 +17,7 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const user = useRequireAuth();
   
-  // Legacy useImdbRating hook kept for potential fallback functionality (not currently used)
-  // const { ratingData, loading: legacyRatingLoading, error: ratingError, refresh: refreshRating } = useImdbRating(movieId, "movie");
-
-  useEffect(() => {
-    fetchMovieDetails();
-  }, [movieId]);
-
-  const fetchMovieDetails = async () => {
+  const fetchMovieDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -42,21 +34,70 @@ const MovieDetails = () => {
       console.error("Error fetching movie details:", error);
       setLoading(false);
     }
-  };
+  }, [movieId]);
+
+  useEffect(() => {
+    fetchMovieDetails();
+  }, [fetchMovieDetails]);
 
   const fetchComprehensiveRatings = async (movieData) => {
     setRatingLoading(true);
     try {
       console.log(`[${new Date().toISOString()}] MovieDetails: Starting fetchComprehensiveRatings for movieId: ${movieId}`);
-      const ratingData = await comprehensiveRatingService.fetchComprehensiveRatings(
-        movieId,
-        "movie",
-        import.meta.env.VITE_OMDB_KEY_1
+      
+      // Resolve IMDb ID from TMDB data first
+      const tmdbResponse = await fetch(
+        `https://api.themoviedb.org/3/movie/${movieId}/external_ids`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
+          },
+        }
       );
-      console.log(`[${new Date().toISOString()}] MovieDetails: Received ratingData:`, ratingData);
+      const tmdbData = await tmdbResponse.json();
+      const imdbId = tmdbData.imdb_id;
+      
+      if (!imdbId) {
+        throw new Error("No IMDb ID found for this movie");
+      }
+      
+      // Make direct API call to OMDB
+      const omdbResponse = await fetch(
+        `https://www.omdbapi.com/?i=${imdbId}&apikey=${import.meta.env.VITE_OMDB_KEY_1}`
+      );
+      const omdbData = await omdbResponse.json();
+      
+      if (omdbData.Response === "False") {
+        throw new Error(omdbData.Error || "OMDB API returned an error");
+      }
+      
+      // Extract ratings directly from OMDB response
+      const rtRating = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value || 'N/A';
+      const mcRating = omdbData.Ratings?.find(r => r.Source === 'Metacritic')?.Value || 'N/A';
+      const imdbRating = omdbData.imdbRating || 'N/A';
+      const imdbVotes = omdbData.imdbVotes || 'N/A';
+      
+      // Format the rating data to match expected structure
+      const ratingData = {
+        imdbRating,
+        rottenTomatoesRating: rtRating,
+        metacriticRating: mcRating,
+        imdbVotes,
+        awards: omdbData.Awards || 'N/A',
+        plot: omdbData.Plot || 'N/A',
+        director: omdbData.Director || 'N/A',
+        actors: omdbData.Actors || 'N/A',
+        writer: omdbData.Writer || 'N/A',
+        source: 'omdb',
+        reliability: { score: 9, freshness: 10 }
+      };
+      
+      console.log(`[${new Date().toISOString()}] MovieDetails: Direct OMDB ratings data:`, ratingData);
       setComprehensiveRating(ratingData);
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] MovieDetails: Error fetching comprehensive ratings:`, error);
+      console.error(`[${new Date().toISOString()}] MovieDetails: Error fetching OMDB ratings directly:`, error);
       // Set an error state to display to the user
       setComprehensiveRating({
         source: 'error',
@@ -109,11 +150,55 @@ const MovieDetails = () => {
     setRefreshing(true);
     try {
       if (movieDetails) {
-        const ratingData = await comprehensiveRatingService.refreshCache(
-          movieId,
-          "movie",
-          import.meta.env.VITE_OMDB_API_KEY
+        // Make direct API call to OMDB (same as initial fetch)
+        const tmdbResponse = await fetch(
+          `https://api.themoviedb.org/3/movie/${movieId}/external_ids`,
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
+            },
+          }
         );
+        const tmdbData = await tmdbResponse.json();
+        const imdbId = tmdbData.imdb_id;
+        
+        if (!imdbId) {
+          throw new Error("No IMDb ID found for this movie");
+        }
+        
+        // Make direct API call to OMDB
+        const omdbResponse = await fetch(
+          `https://www.omdbapi.com/?i=${imdbId}&apikey=${import.meta.env.VITE_OMDB_KEY_1}`
+        );
+        const omdbData = await omdbResponse.json();
+        
+        if (omdbData.Response === "False") {
+          throw new Error(omdbData.Error || "OMDB API returned an error");
+        }
+        
+        // Extract ratings directly from OMDB response
+        const rtRating = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value || 'N/A';
+        const mcRating = omdbData.Ratings?.find(r => r.Source === 'Metacritic')?.Value || 'N/A';
+        const imdbRating = omdbData.imdbRating || 'N/A';
+        const imdbVotes = omdbData.imdbVotes || 'N/A';
+        
+        // Format the rating data to match expected structure
+        const ratingData = {
+          imdbRating,
+          rottenTomatoesRating: rtRating,
+          metacriticRating: mcRating,
+          imdbVotes,
+          awards: omdbData.Awards || 'N/A',
+          plot: omdbData.Plot || 'N/A',
+          director: omdbData.Director || 'N/A',
+          actors: omdbData.Actors || 'N/A',
+          writer: omdbData.Writer || 'N/A',
+          source: 'omdb',
+          reliability: { score: 9, freshness: 10 }
+        };
+        
         setComprehensiveRating(ratingData);
       }
     } catch (error) {
@@ -124,16 +209,7 @@ const MovieDetails = () => {
   };
 
   // Use comprehensive rating data
-  const {
-    imdbRating,
-    rottenTomatoesRating,
-    metacriticRating,
-    awards,
-    source = "tmdb",
-    imdbVotes,
-    tmdbRating,
-    tmdbVoteCount
-  } = comprehensiveRating || {};
+  // Destructured variables removed - using comprehensiveRating properties directly in JSX
 
   if (loading) {
     return (
@@ -287,9 +363,9 @@ const MovieDetails = () => {
             </div>
 
             {/* Awards */}
-            {awards && awards !== "N/A" && (
+            {comprehensiveRating?.awards && comprehensiveRating.awards !== "N/A" && (
               <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-800 rounded-lg">
-                <p className="text-yellow-200 font-medium">Awards: {awards}</p>
+                <p className="text-yellow-200 font-medium">Awards: {comprehensiveRating.awards}</p>
               </div>
             )}
 

@@ -20,17 +20,25 @@ export const omdbConfig = {
 };
 
 // OMDb API Keys array for rotation
-export const OMDB_API_KEYS = [
-  import.meta.env.VITE_OMDB_KEY_1 || '',     // Primary key as specified in requirements
-  import.meta.env.VITE_OMDB_KEY_2 || '',     // Secondary key as specified in requirements
-  import.meta.env.VITE_OMDB_KEY_3 || '',     // Third key as specified in requirements
-  import.meta.env.VITE_OMDB_KEY_4 || '',     // Fourth key as specified in requirements
-  // Fallback to original keys if the required ones aren't defined
-  import.meta.env.VITE_OMDB_API_KEY || '',   // Original key as fallback
-  import.meta.env.VITE_OMDB_API_KEY2 || '',  // Original key as fallback
-  import.meta.env.VITE_OMDB_API_KEY3 || '',  // Original key as fallback
-  import.meta.env.VITE_OMDB_API_KEY4 || ''   // Original key as fallback
-].filter(key => key !== ''); // Remove empty keys
+let _omdbApiKeys = [];
+try {
+  _omdbApiKeys = [
+    import.meta.env.VITE_OMDB_KEY_1 || '',     // Primary key as specified in requirements
+    import.meta.env.VITE_OMDB_KEY_2 || '',     // Secondary key as specified in requirements
+    import.meta.env.VITE_OMDB_KEY_3 || '',     // Third key as specified in requirements
+    import.meta.env.VITE_OMDB_KEY_4 || '',     // Fourth key as specified in requirements
+    // Fallback to original keys if the required ones aren't defined
+    import.meta.env.VITE_OMDB_API_KEY || '',   // Original key as fallback
+    import.meta.env.VITE_OMDB_API_KEY2 || '',  // Original key as fallback
+    import.meta.env.VITE_OMDB_API_KEY3 || '',  // Original key as fallback
+    import.meta.env.VITE_OMDB_API_KEY4 || ''   // Original key as fallback
+  ].filter(key => key !== ''); // Remove empty keys
+} catch (error) {
+  console.warn("Environment variables not available, using empty keys array:", error.message);
+  _omdbApiKeys = [];
+}
+
+export const OMDB_API_KEYS = _omdbApiKeys;
 
 // OMDb Options object - similar to existing options but for OMDb API
 export const omdbOptions = {

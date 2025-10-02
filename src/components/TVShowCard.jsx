@@ -5,17 +5,15 @@ import { Star, Play, Tv } from "lucide-react";
 import useImdbRating from "../hooks/useImdbRating";
 
 const TVShowCard = ({ tvShow }) => {
-  if (!tvShow.poster_path) return null;
-
   // Fetch rating data for this specific TV show using the useImdbRating hook
   const { 
     imdbRating, 
-    imdbVotes, 
+    imdbVotes: ImdbVotes, 
     rottenTomatoes, 
     metacritic, 
-    source,
+    source: Source,
     isLoading: ratingLoading,
-    error 
+    error: Error 
   } = useImdbRating(tvShow.id, 'tv') || {};
 
   const navigate = useNavigate();
@@ -23,6 +21,9 @@ const TVShowCard = ({ tvShow }) => {
   // State for showing tooltip
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipTimeout = useRef(null);
+
+  // If a TV show has no poster, we won't render anything for it.
+  if (!tvShow.poster_path) return null;
 
   // Function to format rating for display
   const formatRating = (rating, type) => {
