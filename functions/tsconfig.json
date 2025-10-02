@@ -10,7 +10,6 @@
   },
   "compileOnSave": true,
   "include": [
-    "getMovieRatings.ts",
     "index.ts"
   ]
 }

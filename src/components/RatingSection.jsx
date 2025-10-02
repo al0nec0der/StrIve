@@ -24,22 +24,20 @@ const RatingSection = ({ ratings = {}, loading = false, fallbackRatings = {} }) 
     switch (type) {
       case 'imdb':
         // Extract value from format like "8.1/10"
-        const imdbMatch = rating.match(/^(\d+\.?\d*)\/\d+/);
-        return imdbMatch ? `${imdbMatch[1]}/10` : rating;
+        return rating.match(/^(\d+\.?\d*)\/(\d+)/) ? `${rating.match(/^(\d+\.?\d*)\/(\d+)/)[1]}/10` : rating;
       case 'rt': // Rotten Tomatoes
         // Extract percentage from format like "85%"
         return rating.replace('%', '');
       case 'mc': // Metacritic
         // Extract score from format like "72/100"
-        const mcMatch = rating.match(/^(\d+)\/\d+/);
-        return mcMatch ? `${mcMatch[1]}/100` : rating;
+        return rating.match(/^(\d+)\/(\d+)/) ? `${rating.match(/^(\d+)\/(\d+)/)[1]}/100` : rating;
       default:
         return rating;
     }
   };
 
   // Individual rating item component
-  const RatingItem = ({ icon: Icon, title, value, subtitle, source, isLoading }) => {
+  const RatingItem = ({ icon, title, value, subtitle, source, isLoading }) => {
     if (isLoading) {
       return (
         <div className="bg-gray-800 rounded-xl p-4 flex flex-col items-center justify-center h-32">
@@ -64,7 +62,7 @@ const RatingSection = ({ ratings = {}, loading = false, fallbackRatings = {} }) 
     return (
       <div className="bg-gray-800 rounded-xl p-4 flex flex-col items-center justify-center h-32 hover:bg-gray-700 transition-colors">
         <div className="text-blue-400 mb-1">
-          <Icon size={24} />
+          {icon && React.createElement(icon, { size: 24 })}
         </div>
         <div className="text-white text-lg font-bold mb-1">{value}</div>
         <div className="text-gray-400 text-sm mb-1">{title}</div>

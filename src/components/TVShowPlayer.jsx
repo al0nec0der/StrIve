@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { RiveStreamingService } from "../util/riveService";
 import { addToList } from "../util/firestoreService";
 import { Star, Maximize, RotateCw, X, Lock } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";
 
 const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [streamingUrl, setStreamingUrl] = useState("");
@@ -78,7 +76,7 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
     };
 
     loadEpisodeStream();
-  }, [tvShow.id, season, episode.episode_number, user, currentServerIndex]);
+  }, [tvShow.id, season, episode.episode_number, user, currentServerIndex, handleAddToWatched, isAddedToWatched, alternativeServers]);
 
   const handleAddToWatched = async () => {
     if (!user || isAddedToWatched) return;
