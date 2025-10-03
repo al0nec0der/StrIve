@@ -5,6 +5,7 @@ import { Star, Maximize, RotateCw, X, Lock } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";
 
 const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
+  console.log("TVShowPlayer mounted with tvShow:", tvShow, "episode:", episode, "season:", season);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [streamingUrl, setStreamingUrl] = useState("");
@@ -14,33 +15,54 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
   const user = useRequireAuth();
   const iframeRef = useRef(null);
 
-  // Get alternative TV streaming servers
-  const alternativeServers = [
+  // Memoize the alternativeServers array to prevent re-creation on every render
+  const alternativeServers = React.useMemo(() => [
     {
-      name: "Rive TV",
-      url: `${import.meta.env.VITE_RIVE_BASE_URL}?type=tv&id=${
-        tvShow.id
-      }&s=${season}&e=${episode.episode_number}`,
+      name: "RiveStream TV",
+      url: `https://rivestream.org/embed?type=tv&id=${tvShow.id}&season=${season}&episode=${episode.episode_number}`,
     },
     {
       name: "Cinemaos TV",
-      url: `${import.meta.env.VITE_CINEMAOS_URL}/${
-        tvShow.id
-      }/${season}/${episode.episode_number}`,
+      url: `${import.meta.env.VITE_CINEMAOS_URL}/${tvShow.id}/${season}/${episode.episode_number}`,
     },
     {
       name: "2Embed TV",
-      url: `${import.meta.env.VITE_2EMBED_URL}/tv?id=${
-        tvShow.id
-      }&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_2EMBED_URL}/tv?id=${tvShow.id}&s=${season}&e=${episode.episode_number}`,
     },
     {
       name: "MultiEmbed TV",
-      url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${
-        tvShow.id
-      }&tmdb=1&s=${season}&e=${episode.episode_number}`,
+      url: `${import.meta.env.VITE_MULTIEMBED_URL}/directstream.php?video_id=${tvShow.id}&tmdb=1&s=${season}&e=${episode.episode_number}`,
     },
-  ];
+  ], [tvShow.id, season, episode.episode_number]);
+
+  const handleAddToWatched = React.useCallback(async () => {
+    if (!user || isAddedToWatched) return;
+
+    try {
+      const watchedItem = {
+        id: `${tvShow.id}_S${season}E${episode.episode_number}`,
+        tvShowId: tvShow.id,
+        title: `${tvShow.name} - S${season}E${episode.episode_number}`,
+        episodeName: episode.name,
+        poster_path: tvShow.poster_path,
+        still_path: episode.still_path,
+        overview: episode.overview,
+        air_date: episode.air_date,
+        season_number: season,
+        episode_number: episode.episode_number,
+        watched_at: new Date().toISOString(),
+        type: "tv_episode",
+      };
+
+      await addToList(user.uid, "watched", watchedItem);
+      setIsAddedToWatched(true);
+      console.log(
+        `Added ${tvShow.name} S${season}E${episode.episode_number} to watched list`
+      );
+    } catch (error) {
+      console.error("Error adding to watched list:", error);
+    }
+  }, [user, isAddedToWatched, tvShow, season, episode]);
 
   useEffect(() => {
     if (!user) return; // If user is null (due to authentication redirect), don't proceed
@@ -76,36 +98,7 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
     };
 
     loadEpisodeStream();
-  }, [tvShow.id, season, episode.episode_number, user, currentServerIndex, handleAddToWatched, isAddedToWatched, alternativeServers]);
-
-  const handleAddToWatched = async () => {
-    if (!user || isAddedToWatched) return;
-
-    try {
-      const watchedItem = {
-        id: `${tvShow.id}_S${season}E${episode.episode_number}`,
-        tvShowId: tvShow.id,
-        title: `${tvShow.name} - S${season}E${episode.episode_number}`,
-        episodeName: episode.name,
-        poster_path: tvShow.poster_path,
-        still_path: episode.still_path,
-        overview: episode.overview,
-        air_date: episode.air_date,
-        season_number: season,
-        episode_number: episode.episode_number,
-        watched_at: new Date().toISOString(),
-        type: "tv_episode",
-      };
-
-      await addToList(user.uid, "watched", watchedItem);
-      setIsAddedToWatched(true);
-      console.log(
-        `Added ${tvShow.name} S${season}E${episode.episode_number} to watched list`
-      );
-    } catch (error) {
-      console.error("Error adding to watched list:", error);
-    }
-  };
+  }, [tvShow.id, tvShow.name, season, episode.episode_number, episode.name, user, currentServerIndex, handleAddToWatched, isAddedToWatched, alternativeServers]);
 
   const handleTryNextServer = () => {
     if (currentServerIndex < alternativeServers.length - 1) {
@@ -241,6 +234,8 @@ const TVShowPlayer = ({ tvShow, episode, season, onClose }) => {
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+              onLoad={() => console.log("TV Show iframe loaded with URL:", streamingUrl)}
+              onError={(e) => console.error("TV Show iframe error:", e)}
             />
           )}
         </div>

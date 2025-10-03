@@ -29,9 +29,9 @@ const formatCount = (num) => {
 const TVShowDetails = () => {
   const { tvId } = useParams();
   const navigate = useNavigate();
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [selectedEpisode, setSelectedEpisode] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get IMDb data for this TV show using the new hook
+  const { data: imdbData, loading: imdbLoading, error: imdbError } = useImdbTitle(tvId, "tv");
 
   const dispatch = useDispatch();
   const user = useRequireAuth();
@@ -39,20 +39,31 @@ const TVShowDetails = () => {
     (store) => store.tvShows
   );
   
-  // Get IMDb data for this TV show using the new hook
-  const { data: imdbData, loading: imdbLoading, error: imdbError } = useImdbTitle(tvId, "tv");
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTVShowDetails();
-  }, [tvId]);
+  const fetchSeasonDetails = React.useCallback(async (seasonNumber) => {
+    try {
+      const seasonResponse = await fetch(
+        `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?language=en-US`,
+        options
+      );
+      const seasonData = await seasonResponse.json();
+      dispatch(setTVShowSeasons(seasonData));
+      dispatch(setSelectedSeason(seasonNumber));
+    } catch (error) {
+      console.error("Error fetching season details:", error);
+    }
+  }, [tvId, dispatch]);
 
-  const fetchTVShowDetails = async () => {
+  const fetchTVShowDetails = React.useCallback(async () => {
     try {
       setIsLoading(true);
 
-      // Fetch detailed TV show information
+      // Fetch detailed TV show information with images
       const detailsResponse = await fetch(
-        `https://api.themoviedb.org/3/tv/${tvId}?language=en-US`,
+        `https://api.themoviedb.org/3/tv/${tvId}?language=en-US&append_to_response=images&include_image_language=en,null`,
         options
       );
       const detailsData = await detailsResponse.json();
@@ -71,21 +82,11 @@ const TVShowDetails = () => {
       console.error("Error fetching TV show details:", error);
       setIsLoading(false);
     }
-  };
+  }, [tvId, dispatch, fetchSeasonDetails]);
 
-  const fetchSeasonDetails = async (seasonNumber) => {
-    try {
-      const seasonResponse = await fetch(
-        `https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?language=en-US`,
-        options
-      );
-      const seasonData = await seasonResponse.json();
-      dispatch(setTVShowSeasons(seasonData));
-      dispatch(setSelectedSeason(seasonNumber));
-    } catch (error) {
-      console.error("Error fetching season details:", error);
-    }
-  };
+  useEffect(() => {
+    fetchTVShowDetails();
+  }, [tvId, fetchTVShowDetails]);
 
   const handleSeasonChange = (seasonNumber) => {
     fetchSeasonDetails(seasonNumber);
@@ -165,9 +166,20 @@ const TVShowDetails = () => {
           {/* Content */}
           <div className="absolute bottom-0 left-0 right-0 p-12 z-10">
             <div className="max-w-4xl">
-              <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
-                {tvShowDetails?.name}
-              </h1>
+              {/* Title Logo or Text */}
+              {tvShowDetails?.images?.logos?.length > 0 ? (
+                <div className="mb-4">
+                  <img 
+                    src={`https://image.tmdb.org/t/p/w500${tvShowDetails.images.logos[0].file_path}`}
+                    alt={`${tvShowDetails.name} Logo`}
+                    className="max-w-full h-auto max-h-32 object-contain"
+                  />
+                </div>
+              ) : (
+                <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+                  {tvShowDetails?.name}
+                </h1>
+              )}
 
               {/* Rating Section with Progressive Loading */}
               <div className="mb-4">
@@ -176,18 +188,18 @@ const TVShowDetails = () => {
                   {/* TMDB Rating Card */}
                   <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-2 text-center">
                     <div className="text-xs text-gray-400 uppercase tracking-wider">TMDB</div>
-                    <div className="text-lg font-bold text-white">
-                      {tvShowDetails.vote_average?.toFixed(1) || 'N/A'}
+                    <div className="text-lg font-bold text-white mt-1">
+                      {tvShowDetails?.vote_average?.toFixed(1) || 'N/A'}
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {tvShowDetails.vote_count ? `${formatCount(tvShowDetails.vote_count)} votes` : 'User Rating'}
+                    <div className="text-xs text-gray-400 mt-1">
+                      {tvShowDetails?.vote_count ? `${formatCount(tvShowDetails.vote_count)} votes` : 'User Rating'}
                     </div>
                   </div>
                   
                   {/* IMDb Rating Card */}
                   <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg p-2 text-center">
                     <div className="text-xs text-gray-400 uppercase tracking-wider">IMDb</div>
-                    <div className="text-lg font-bold text-white">
+                    <div className="text-lg font-bold text-white mt-1">
                       {imdbLoading ? (
                         <div className="h-5 w-6 bg-gray-600 rounded-full animate-pulse mx-auto"></div>
                       ) : imdbData && imdbData.rating && imdbData.rating.aggregateRating ? (
@@ -196,7 +208,7 @@ const TVShowDetails = () => {
                         'N/A'
                       )}
                     </div>
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 mt-1">
                       {imdbData && imdbData.rating && imdbData.rating.voteCount ? 
                         `${formatCount(imdbData.rating.voteCount)} votes` : 
                         imdbLoading ? 'Loading...' : 'N/A votes'}
@@ -260,7 +272,7 @@ const TVShowDetails = () => {
                     className="flex items-center gap-2 px-8 py-4 bg-white text-black text-xl font-semibold rounded hover:bg-gray-200 transition-all duration-300 transform hover:scale-105"
                   >
                     <Play className="w-6 h-6" />
-                    Play S{selectedSeason}E1
+                    Play First Episode
                   </button>
                 )}
 
@@ -311,7 +323,7 @@ const TVShowDetails = () => {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       }`}
                     >
-                      {season.name} {season.season_number > 0 ? `S${season.season_number}` : ''}
+                      {season.name}
                     </button>
                   ))}
               </div>
@@ -322,7 +334,7 @@ const TVShowDetails = () => {
           {tvShowSeasons?.episodes && (
             <div>
               <h2 className="text-white text-2xl font-bold mb-6">
-                Season {selectedSeason} Episodes
+                {tvShowDetails?.seasons?.find(s => s.season_number === selectedSeason)?.name || `Season ${selectedSeason}`} Episodes
               </h2>
               <div className="grid gap-4">
                 {tvShowSeasons.episodes.map((episode) => (
@@ -341,9 +353,14 @@ const TVShowDetails = () => {
                       )}
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-white text-lg font-semibold">
-                            {episode.episode_number}. {episode.name}
-                          </h3>
+                          <div>
+                            <h3 className="text-white text-lg font-semibold">
+                              {episode.name}
+                            </h3>
+                            <span className="text-gray-400 text-sm">
+                              Episode {episode.episode_number}
+                            </span>
+                          </div>
                           <span className="text-gray-400 text-sm flex-shrink-0">
                             {episode.runtime} min
                           </span>
@@ -355,7 +372,7 @@ const TVShowDetails = () => {
                           <span>Air Date: {episode.air_date}</span>
                           <span className="flex items-center">
                             <Star className="w-4 h-4 mr-1 text-yellow-400 fill-yellow-400" />
-                            {episode.vote_average?.toFixed(1)}
+                            {episode.vote_average ? episode.vote_average.toFixed(1) : 'N/A'}
                           </span>
                         </div>
                       </div>

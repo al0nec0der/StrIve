@@ -1,35 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Star, Flame, Play, Calendar, RotateCcw } from "lucide-react";
-
+import React from "react";
+import { useSelector } from "react-redux";
+import { Star, Flame, Play, Calendar } from "lucide-react";
 
 import MovieCard from "./MovieCard";
 
 const SecondaryContainer = () => {
   const movies = useSelector((store) => store.movies);
-  const dispatch = useDispatch();
-  // const navigate = useNavigate(); // Currently unused
-  
-  // State for bulk processing
-  const [bulkProcessingStatus, setBulkProcessingStatus] = useState({
-    isProcessing: false,
-    progress: 0,
-    total: 0,
-    message: ""
-  });
 
-  // Flatten all movies from all categories
-  const allMovies = React.useMemo(() => [
-    ...(movies.nowPlayingMovies || []),
-    ...(movies.popularMovies || []),
-    ...(movies.topRatedMovies || []),
-    ...(movies.upcomingMovies || [])
-  ], [
-    movies.nowPlayingMovies,
-    movies.popularMovies,
-    movies.topRatedMovies,
-    movies.upcomingMovies
-  ]);
+  // If no movies, don't render anything
+  if (!movies.nowPlayingMovies) return null;
+
+
 
 
 

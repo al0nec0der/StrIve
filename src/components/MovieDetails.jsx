@@ -6,6 +6,7 @@ import Header from "./Header";
 import { Play, Plus, Star, RotateCcw } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";
 import useImdbTitle from "../hooks/useImdbTitle";
+import MoviePlayer from "./MoviePlayer";
 
 // Helper function to format large numbers
 const formatCount = (num) => {
@@ -20,24 +21,32 @@ const formatCount = (num) => {
 };
 
 const MovieDetails = () => {
-  const { movieId } = useParams();
+  const { movieId, imdbId } = useParams();
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPlayer, setShowPlayer] = useState(false);
   const navigate = useNavigate();
   const user = useRequireAuth();
   
+  // Determine which ID to use - if imdbId param exists, use it; otherwise use movieId
+  const currentId = imdbId || movieId;
+  const mediaType = currentId && currentId.startsWith('tt') ? "movie" : "movie";  // For movies, it's always "movie"
+  
   // Get IMDb data for this movie using the new hook
-  const { data: imdbData, loading: imdbLoading, error: imdbError } = useImdbTitle(movieId, "movie");
+  const { data: imdbData, loading: imdbLoading } = useImdbTitle(currentId, mediaType);
 
   const fetchMovieDetails = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Fetch detailed movie information using TMDB ID with images
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/${movieId}?language=en-US`,
+        `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=images&include_image_language=en,null`,
         options
       );
-      const data = await response.json();
-      setMovieDetails(data);
+      const movieData = await response.json();
+      setMovieDetails(movieData);
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching movie details:", error);
@@ -55,7 +64,7 @@ const MovieDetails = () => {
       navigate("/login");
       return;
     }
-    navigate(`/movie/${movieId}/play`);
+    setShowPlayer(true);
   };
 
   const handleAddToWatchlist = async () => {
@@ -128,9 +137,20 @@ const MovieDetails = () => {
         {/* Content */}
         <div className="absolute bottom-0 left-0 right-0 p-12 z-10">
           <div className="max-w-4xl">
-            <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
-              {movieDetails.title}
-            </h1>
+            {/* Title Logo or Text */}
+            {movieDetails.images?.logos?.length > 0 ? (
+              <div className="mb-4">
+                <img 
+                  src={`https://image.tmdb.org/t/p/w500${movieDetails.images.logos[0].file_path}`}
+                  alt={`${movieDetails.title} Logo`}
+                  className="max-w-full h-auto max-h-32 object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+                {movieDetails.title}
+              </h1>
+            )}
 
             {/* Rating Section with Progressive Loading */}
             <div className="mb-6">
@@ -223,7 +243,13 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      
+      {/* Movie Player Modal */}
+      {showPlayer && (
+        <MoviePlayer 
+          movieId={movieId} 
+          onClose={() => setShowPlayer(false)} 
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,279 @@
+/* Player Container */
+.player-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Video Player Styles */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 70%;
+  background: #000;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Overlay Controls */
+.overlay-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.overlay-controls button,
+.overlay-controls select {
+  pointer-events: auto;
+}
+
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
+
+.top-controls .movie-info {
+  flex: 1;
+  margin-left: 15px;
+}
+
+.top-controls h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+.top-controls p {
+  color: #ccc;
+  font-size: 0.9rem;
+  margin: 5px 0 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.bottom-controls {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.server-selector label {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.server-select {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: none;
+  background: #333;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+/* Movie Details Panel */
+.movie-details-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  background: #1a1a1a;
+  padding: 15px 20px;
+  display: flex;
+  gap: 15px;
+  box-sizing: border-box;
+  border-top: 1px solid #333;
+}
+
+.movie-poster {
+  width: 80px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.movie-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Default poster for when image fails to load */
+.movie-poster img {
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+}
+
+.movie-poster img::before {
+  content: "Movie Poster";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.movie-details {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.movie-details h1 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin: 0 0 8px 0;
+}
+
+.movie-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+.movie-meta .dot {
+  color: #777;
+}
+
+.movie-details p {
+  color: #ddd;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0 0 10px 0;
+}
+
+.cast-section h3 {
+  color: #fff;
+  font-size: 1rem;
+  margin: 0 0 5px 0;
+}
+
+.cast-section p {
+  color: #aaa;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Control Buttons */
+.control-button {
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.control-button:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+/* Loading and Error States */
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  text-align: center;
+  z-index: 10;
+}
+
+.loading-indicator .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(200, 0, 0, 0.8);
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 10;
+  min-width: 300px;
+}
+
+.error-message.hidden {
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .top-controls h2 {
+    font-size: 1.2rem;
+  }
+  
+  .top-controls p {
+    font-size: 0.8rem;
+  }
+  
+  .movie-details-panel {
+    padding: 10px 15px;
+  }
+  
+  .movie-poster {
+    width: 60px;
+    height: 90px;
+  }
+  
+  .movie-details h1 {
+    font-size: 1.1rem;
+  }
+  
+  .movie-meta {
+    font-size: 0.8rem;
+  }
+  
+  .movie-details p {
+    font-size: 0.8rem;
+  }
+}

@@ -11,10 +11,20 @@ const MovieCard = ({ movie }) => {
 
   const handleMovieClick = () => {
     console.log(
-      `Selected movie: ${movie.original_title} (TMDB ID: ${movie.id})`
+      `Selected media: ${movie.original_title} (ID: ${movie.id}, Type: ${movie.mediaType})`
     );
-    // Navigate to the movie detail page
-    navigate(`/movie/${movie.id}`);
+    
+    // Determine if this is a TV show based on mediaType
+    const isTVShow = movie.mediaType === 'tv';
+                    
+    // This is now a TMDB ID (from TMDB search), not IMDb ID
+    if (isTVShow) {
+      // Navigate to the TV show detail page
+      navigate(`/shows/${movie.id}`);
+    } else {
+      // Navigate to the movie detail page
+      navigate(`/movie/${movie.id}`);
+    }
   };
 
   return (
@@ -24,7 +34,7 @@ const MovieCard = ({ movie }) => {
     >
       <div className="relative overflow-hidden rounded-lg">
         <img
-          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+          src={movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`}
           alt={movie.original_title}
           className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500"
         />
@@ -59,7 +69,7 @@ const MovieCard = ({ movie }) => {
           {movie.original_title}
         </h3>
         <p className="text-gray-400 text-xs">
-          {movie.release_date?.split("-")[0]} • Movie
+          {movie.release_date?.split("-")[0] || movie.first_air_date?.split("-")[0]} • {movie.mediaType === 'tv' ? 'TV' : 'Movie'}
         </p>
       </div>
     </div>

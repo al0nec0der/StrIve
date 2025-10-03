@@ -28,6 +28,29 @@ class IMDbService {
       throw error;
     }
   }
+
+  /**
+   * Searches for titles based on a query string
+   * @param {string} query - The search query
+   * @returns {Promise<Array>} The array of title data from IMDb API
+   */
+  async searchTitles(query, limit = 50) {
+    try {
+      const encodedQuery = encodeURIComponent(query);
+      const url = `${this.baseUrl}/search/titles?query=${encodedQuery}&limit=${limit}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.titles || [];
+    } catch (error) {
+      console.error(`Error searching for titles with query "${query}":`, error);
+      throw error;
+    }
+  }
 }
 
 export default IMDbService;

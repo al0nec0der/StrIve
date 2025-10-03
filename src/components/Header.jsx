@@ -8,7 +8,7 @@ import { Search } from "lucide-react";
 const Header = () => {
   const navigate = useNavigate();
   const user = useSelector((store) => store.user.user);
-  const [searchQuery, setSearchQuery] = useState("");
+
 
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef(null);
@@ -19,13 +19,7 @@ const Header = () => {
       .catch(() => navigate("/error"));
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Navigate to search results page
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+
 
   // Close dropdown on outside click or Esc
   useEffect(() => {
@@ -105,23 +99,14 @@ const Header = () => {
               </ul>
             </nav>
 
-            {/* Search form */}
-            <form onSubmit={handleSearch} className="flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="bg-gray-800 text-white rounded-l-full py-1 px-4 focus:outline-none focus:ring-2 focus:ring-red-600 w-32 md:w-48"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="bg-gray-800 hover:bg-gray-700 text-white rounded-r-full p-2 focus:outline-none"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </form>
+            {/* Search Icon */}
+            <button
+              onClick={() => navigate("/search")}
+              aria-label="Search"
+              className="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 focus:outline-none"
+            >
+              <Search className="w-5 h-5" />
+            </button>
 
             {/* Account icon + Dropdown (black, neat, modern) */}
             <div className="relative mr-4" ref={menuRef}>
@@ -198,23 +183,14 @@ const Header = () => {
               </ul>
             </nav>
 
-            {/* Search form for non-authenticated users */}
-            <form onSubmit={handleSearch} className="flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="bg-gray-800 text-white rounded-l-full py-1 px-4 focus:outline-none focus:ring-2 focus:ring-red-600 w-32 md:w-48"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="bg-gray-800 hover:bg-gray-700 text-white rounded-r-full p-2 focus:outline-none"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </form>
+            {/* Search Icon for non-authenticated users */}
+            <button
+              onClick={() => navigate("/search")}
+              aria-label="Search"
+              className="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 focus:outline-none"
+            >
+              <Search className="w-5 h-5" />
+            </button>
 
             {/* Login button for non-authenticated users */}
             <button
