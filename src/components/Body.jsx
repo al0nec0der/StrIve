@@ -9,6 +9,8 @@ import TVShowDetails from "./TVShowDetails";
 import SearchPage from "./SearchPage";
 import ProtectedRoute from "./ProtectedRoute";
 import MyListPage from "./MyListPage"; // Import MyListPage
+import MyListsPage from "./MyListsPage"; // Import MyListsPage
+import ListDetailsPage from "./ListDetailsPage"; // Import ListDetailsPage
 import { RouterProvider } from "react-router-dom";
 import Footer from "./Footer";
 
@@ -51,6 +53,22 @@ const Body = () => {
       element: (
         <ProtectedRoute>
           <MyListPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-lists", // Add new route for My Lists
+      element: (
+        <ProtectedRoute>
+          <MyListsPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-lists/:listId", // Add new route for individual list details
+      element: (
+        <ProtectedRoute>
+          <ListDetailsPage />
         </ProtectedRoute>
       ),
     },

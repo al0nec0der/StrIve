@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  // Allow all access during development
+  match /databases/{database}/documents {
+    // Existing rules can go here
+    // For now, we implement security for custom lists
+    
+    // Custom lists rules
+    match /users/{userId}/custom_lists {
+      // Allow users to list their custom lists
+      allow list: if request.auth != null && request.auth.uid == userId;
+      // Allow users to create custom lists for themselves
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/custom_lists/{listId} {
+      // Allow users to read their own custom lists
+      allow get: if request.auth != null && request.auth.uid == userId;
+      // Allow users to create custom lists for themselves
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow users to update their own custom lists
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow users to delete their own custom lists
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Subcollection rules for list items
+    match /users/{userId}/custom_lists/{listId}/items {
+      // Allow users to list items in their lists
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/custom_lists/{listId}/items/{itemId} {
+      // Allow users to read items in their lists
+      allow get: if request.auth != null && request.auth.uid == userId;
+      // Allow users to add items to their lists
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow users to update items in their lists
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow users to delete items from their lists
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

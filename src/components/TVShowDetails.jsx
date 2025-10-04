@@ -8,11 +8,14 @@ import {
   setSelectedSeason,
 } from "../util/tvShowsSlice";
 import { addToList } from "../util/firestoreService";
+import { addItem } from "../util/listsSlice";
 import TVShowPlayer from "./TVShowPlayer";
 import Header from "./Header";
 import { ArrowLeft, Play, Plus, Star } from "lucide-react";
 import useImdbTitle from "../hooks/useImdbTitle";
 import useRequireAuth from "../hooks/useRequireAuth";
+import AddToListPopover from "./AddToListPopover";
+import CreateListModal from "./CreateListModal";
 
 // Helper function to format large numbers
 const formatCount = (num) => {
@@ -42,6 +45,8 @@ const TVShowDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedEpisode, setSelectedEpisode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPopover, setShowPopover] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const fetchSeasonDetails = React.useCallback(async (seasonNumber) => {
     try {
@@ -124,6 +129,48 @@ const TVShowDetails = () => {
       console.error("Error adding to watchlist:", error);
       alert("Failed to add to watchlist. Please try again.");
     }
+  };
+
+  const handleSelectList = async (listId, listType) => {
+    if (!user) {
+      alert("Please log in to add shows to your lists.");
+      setShowPopover(false);
+      return;
+    }
+
+    try {
+      const mediaItem = {
+        id: tvId,
+        title: tvShowDetails?.name || "TV Show",
+        poster_path: tvShowDetails?.poster_path,
+        overview: tvShowDetails?.overview,
+        first_air_date: tvShowDetails?.first_air_date,
+        vote_average: tvShowDetails?.vote_average,
+        type: "tv",
+      };
+
+      if (listType === 'watchlist') {
+        await addToList(user.uid, "watchlist", mediaItem);
+        alert(`${mediaItem.title} added to your watchlist!`);
+      } else {
+        await dispatch(addItem({ 
+          userId: user.uid, 
+          listId, 
+          mediaItem 
+        })).unwrap();
+        alert(`${mediaItem.title} added to your list!`);
+      }
+      
+      setShowPopover(false);
+    } catch (error) {
+      console.error("Error adding to list:", error);
+      alert("Failed to add to list. Please try again.");
+    }
+  };
+
+  const handleCreateNew = () => {
+    setShowPopover(false);
+    setShowCreateModal(true);
   };
 
   if (isLoading) {
@@ -276,13 +323,28 @@ const TVShowDetails = () => {
                   </button>
                 )}
 
-                <button
-                  onClick={handleAddToWatchlist}
-                  className="flex items-center gap-2 px-8 py-4 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
-                >
-                  <Plus className="w-6 h-6" />
-                  My List
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={handleAddToWatchlist}
+                    onMouseEnter={() => setShowPopover(true)}
+                    className="flex items-center gap-2 px-8 py-4 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Plus className="w-6 h-6" />
+                    My List
+                  </button>
+                  
+                  {showPopover && (
+                    <div 
+                      onMouseEnter={() => setShowPopover(true)}
+                      onMouseLeave={() => setShowPopover(false)}
+                    >
+                      <AddToListPopover 
+                        onSelectList={handleSelectList}
+                        onCreateNew={handleCreateNew}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Genres */}
@@ -397,6 +459,13 @@ const TVShowDetails = () => {
           }}
         />
       )}
+
+      {/* Create List Modal */}
+      <CreateListModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+        userId={user?.uid} 
+      />
     </>
   );
 };

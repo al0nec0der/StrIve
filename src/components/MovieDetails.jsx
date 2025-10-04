@@ -2,11 +2,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
+import { addItem } from "../util/listsSlice";
+import { useDispatch, useSelector } from "react-redux";
 import Header from "./Header";
 import { Play, Plus, Star, RotateCcw } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";
 import useImdbTitle from "../hooks/useImdbTitle";
 import MoviePlayer from "./MoviePlayer";
+import AddToListPopover from "./AddToListPopover";
+import CreateListModal from "./CreateListModal";
 
 // Helper function to format large numbers
 const formatCount = (num) => {
@@ -25,8 +29,11 @@ const MovieDetails = () => {
   const [movieDetails, setMovieDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [showPopover, setShowPopover] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
   const user = useRequireAuth();
+  const dispatch = useDispatch();
   
   // Determine which ID to use - if imdbId param exists, use it; otherwise use movieId
   const currentId = imdbId || movieId;
@@ -90,6 +97,48 @@ const MovieDetails = () => {
       console.error("Error adding to watchlist:", error);
       alert("Failed to add to watchlist. Please try again.");
     }
+  };
+
+  const handleSelectList = async (listId, listType) => {
+    if (!user) {
+      alert("Please log in to add movies to your lists.");
+      setShowPopover(false);
+      return;
+    }
+
+    try {
+      const mediaItem = {
+        id: movieDetails.id,
+        title: movieDetails.title,
+        poster_path: movieDetails.poster_path,
+        overview: movieDetails.overview,
+        release_date: movieDetails.release_date,
+        vote_average: movieDetails.vote_average,
+        type: "movie",
+      };
+
+      if (listType === 'watchlist') {
+        await addToList(user.uid, "watchlist", mediaItem);
+        alert(`${mediaItem.title} added to your watchlist!`);
+      } else {
+        await dispatch(addItem({ 
+          userId: user.uid, 
+          listId, 
+          mediaItem 
+        })).unwrap();
+        alert(`${mediaItem.title} added to your list!`);
+      }
+      
+      setShowPopover(false);
+    } catch (error) {
+      console.error("Error adding to list:", error);
+      alert("Failed to add to list. Please try again.");
+    }
+  };
+
+  const handleCreateNew = () => {
+    setShowPopover(false);
+    setShowCreateModal(true);
   };
 
   if (loading) {
@@ -217,13 +266,28 @@ const MovieDetails = () => {
                 Play
               </button>
 
-              <button
-                onClick={handleAddToWatchlist}
-                className="flex items-center gap-2 px-8 py-4 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
-              >
-                <Plus className="w-6 h-6" />
-                My List
-              </button>
+              <div className="relative">
+                <button
+                  onClick={handleAddToWatchlist}
+                  onMouseEnter={() => setShowPopover(true)}
+                  className="flex items-center gap-2 px-8 py-4 bg-gray-600/80 text-white text-xl font-semibold rounded hover:bg-gray-500/80 transition-all duration-300 transform hover:scale-105"
+                >
+                  <Plus className="w-6 h-6" />
+                  My List
+                </button>
+                
+                {showPopover && (
+                  <div 
+                    onMouseEnter={() => setShowPopover(true)}
+                    onMouseLeave={() => setShowPopover(false)}
+                  >
+                    <AddToListPopover 
+                      onSelectList={handleSelectList}
+                      onCreateNew={handleCreateNew}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Genres */}
@@ -250,6 +314,13 @@ const MovieDetails = () => {
           onClose={() => setShowPlayer(false)} 
         />
       )}
+
+      {/* Create List Modal */}
+      <CreateListModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+        userId={user?.uid} 
+      />
     </div>
   );
 };
