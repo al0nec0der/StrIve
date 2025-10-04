@@ -90,7 +90,7 @@ const Header = () => {
                 </li>
                 <li>
                   <button
-                    onClick={() => {}}
+                    onClick={() => navigate("/my-list")}
                     className="hover:text-red-500 focus:outline-none"
                   >
                     My Lists

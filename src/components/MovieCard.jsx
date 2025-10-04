@@ -1,45 +1,44 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, Play } from "lucide-react";
+import { Star, Play, Trash2 } from "lucide-react";
 
-// Define MovieCard component outside of SecondaryContainer to avoid conditional hook calls
-const MovieCard = ({ movie }) => {
+const MovieCard = ({ movie, onRemove }) => {
   const navigate = useNavigate();
 
-  // If a movie has no poster, we won't render anything for it.
-  if (!movie.poster_path || movie.poster_path.trim() === '') return null;
+  if (!movie.poster_path || movie.poster_path.trim() === "") return null;
 
-  const handleMovieClick = () => {
-    console.log(
-      `Selected media: ${movie.original_title} (ID: ${movie.id}, Type: ${movie.mediaType})`
-    );
-    
-    // Determine if this is a TV show based on mediaType
-    const isTVShow = movie.mediaType === 'tv';
-                    
-    // This is now a TMDB ID (from TMDB search), not IMDb ID
+  const handleCardClick = () => {
+    const isTVShow = movie.media_type === "tv" || movie.first_air_date;
     if (isTVShow) {
-      // Navigate to the TV show detail page
       navigate(`/shows/${movie.id}`);
     } else {
-      // Navigate to the movie detail page
       navigate(`/movie/${movie.id}`);
+    }
+  };
+
+  const handleRemoveClick = (e) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onRemove) {
+      onRemove(movie);
     }
   };
 
   return (
     <div
       className="flex-none w-48 mr-4 cursor-pointer group transition-all duration-300"
-      onClick={handleMovieClick}
+      onClick={handleCardClick}
     >
       <div className="relative overflow-hidden rounded-lg">
         <img
-          src={movie.poster_path.startsWith('http') ? movie.poster_path : `https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-          alt={movie.original_title}
+          src={
+            movie.poster_path.startsWith("http")
+              ? movie.poster_path
+              : `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+          }
+          alt={movie.title || movie.name}
           className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
-        {/* Enhanced Play overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
           <div className="absolute bottom-4 left-4 right-4">
             <div className="flex items-center justify-between">
@@ -55,7 +54,15 @@ const MovieCard = ({ movie }) => {
           </div>
         </div>
 
-        {/* TMDB Rating Badge */}
+        {onRemove && (
+            <div 
+                className="absolute top-2 right-2 bg-red-600 p-2 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleRemoveClick}
+            >
+                <Trash2 className="w-4 h-4 text-white" />
+            </div>
+        )}
+
         <div className="absolute top-2 left-2">
           <div className="flex items-center px-2 py-1 bg-blue-500 bg-opacity-30 rounded text-xs">
             <Star className="w-3 h-3 mr-1 text-blue-300 fill-blue-300" />
@@ -66,10 +73,12 @@ const MovieCard = ({ movie }) => {
 
       <div className="mt-2">
         <h3 className="text-white text-sm font-medium truncate group-hover:text-red-400 transition-colors">
-          {movie.original_title}
+          {movie.title || movie.name}
         </h3>
         <p className="text-gray-400 text-xs">
-          {movie.release_date?.split("-")[0] || movie.first_air_date?.split("-")[0]} • {movie.mediaType === 'tv' ? 'TV' : 'Movie'}
+          {
+            (movie.release_date || movie.first_air_date)?.split("-")[0]
+          } • {movie.media_type === 'tv' || movie.first_air_date ? 'TV' : 'Movie'}
         </p>
       </div>
     </div>

@@ -8,6 +8,7 @@ import MoviePlayer from "./MoviePlayer";
 import TVShowDetails from "./TVShowDetails";
 import SearchPage from "./SearchPage";
 import ProtectedRoute from "./ProtectedRoute";
+import MyListPage from "./MyListPage"; // Import MyListPage
 import { RouterProvider } from "react-router-dom";
 import Footer from "./Footer";
 
@@ -42,6 +43,14 @@ const Body = () => {
       element: (
         <ProtectedRoute>
           <SearchPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-list", // Add new route for My List
+      element: (
+        <ProtectedRoute>
+          <MyListPage />
         </ProtectedRoute>
       ),
     },
