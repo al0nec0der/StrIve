@@ -12,6 +12,7 @@ Strive is a modern, feature-rich web application designed to be a personalized d
     * **Personal Watchlist:** A default place to save content you want to watch later.
     * **Custom Lists:** Create, name, and manage an unlimited number of personal lists (e.g., "Favorite Comedies", "Mind-Bending Sci-Fi").
     * **Seamless Organization:** Add any movie or show to any of your lists directly from its details page.
+* **🔄 Import & Export Lists:** Allow users to import and export their watchlist and viewing data in formats like CSV or JSON, giving them full control and portability of their data.
 * **🎥 Dynamic Content Discovery:** Browse extensive lists of movies and TV shows, categorized into:
     * Now Playing, Popular, Top Rated, and Upcoming Movies.
     * On The Air, Popular, and Top Rated TV Shows.
@@ -29,7 +30,7 @@ Strive is a modern, feature-rich web application designed to be a personalized d
 This project has a forward-looking roadmap to incorporate more advanced, user-centric features:
 
 * **🤖 AI-Powered Recommendations:** Implement a recommendation engine to provide personalized movie and TV show suggestions based on a user's viewing history, ratings, and custom watchlist data.
-* **🔄 Import & Export Lists:** Allow users to import and export their watchlist and viewing data in formats like CSV or JSON, giving them full control and portability of their data.
+
 * **👥 Social Features:** Introduce the ability to share custom lists with friends and discover new content based on their activity.
 
 ---

@@ -11,6 +11,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import MyListPage from "./MyListPage"; // Import MyListPage
 import MyListsPage from "./MyListsPage"; // Import MyListsPage
 import ListDetailsPage from "./ListDetailsPage"; // Import ListDetailsPage
+import ImportPage from "./ImportPage"; // Import ImportPage
+import ImportReviewPage from "./ImportReviewPage"; // Import ImportReviewPage
 import { RouterProvider } from "react-router-dom";
 import Footer from "./Footer";
 
@@ -69,6 +71,22 @@ const Body = () => {
       element: (
         <ProtectedRoute>
           <ListDetailsPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/import", // Add new route for import page
+      element: (
+        <ProtectedRoute>
+          <ImportPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/import/review", // Add new route for import review page
+      element: (
+        <ProtectedRoute>
+          <ImportReviewPage />
         </ProtectedRoute>
       ),
     },

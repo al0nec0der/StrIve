@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Download } from 'lucide-react';
 import { fetchItemStatus, addItemToList, removeItemFromList } from '../util/listsSlice';
 import useRequireAuth from '../hooks/useRequireAuth';
+import { getAuth } from 'firebase/auth';
 
-const ListActionsButton = ({ mediaItem }) => {
+const ListActionsButton = ({ mediaItem, listId, listDetails }) => {
   const dispatch = useDispatch();
   const user = useRequireAuth();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -37,7 +38,64 @@ const ListActionsButton = ({ mediaItem }) => {
     });
   };
 
+  // Export functionality for list (when listId is provided)
+  const handleExport = useCallback(async () => {
+    if (!user || !listId) {
+      console.error('User not authenticated or list ID missing');
+      return;
+    }
+
+    try {
+      // Get the current user's ID token for authentication
+      const auth = getAuth();
+      const token = await auth.currentUser.getIdToken();
+
+      // Make request to export endpoint
+      const response = await fetch(`/api/lists/${listId}/export`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed with status: ${response.status}`);
+      }
+
+      // Get the response as blob
+      const blob = await response.blob();
+
+      // Create a temporary link to trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Construct filename using list name
+      const fileName = listDetails?.name 
+        ? `${listDetails.name.replace(/\s+/g, '_')}-letswatchu-export.csv`
+        : `list-${listId}-letswatchu-export.csv`;
+      
+      link.setAttribute('download', fileName);
+      
+      // Append to document, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the object URL
+      window.URL.revokeObjectURL(url);
+
+      console.log('List exported successfully');
+    } catch (error) {
+      console.error('Failed to export list:', error);
+      alert(`Failed to export list: ${error.message}`);
+    }
+  }, [user, listId, listDetails]);
+
   const isInAnyList = Object.values(memberships).some((status) => status);
+
+  // If listId is provided, show export option in the dropdown
+  const hasListContext = !!listId;
 
   return (
     <div
@@ -64,6 +122,17 @@ const ListActionsButton = ({ mediaItem }) => {
                 </button>
               </li>
             ))}
+            {hasListContext && (
+              <li>
+                <button
+                  onClick={handleExport}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center justify-between"
+                >
+                  <span>Export as CSV</span>
+                  <Download className="w-5 h-5" />
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       )}
