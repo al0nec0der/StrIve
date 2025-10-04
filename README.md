@@ -8,6 +8,10 @@ Strive is a modern, feature-rich web application designed to be a personalized d
 ## ⚡ Features
 
 * **🔐 Secure Authentication:** User sign-up and login functionality powered by **Firebase Authentication**.
+* **📚 Advanced List Management:**
+    * **Personal Watchlist:** A default place to save content you want to watch later.
+    * **Custom Lists:** Create, name, and manage an unlimited number of personal lists (e.g., "Favorite Comedies", "Mind-Bending Sci-Fi").
+    * **Seamless Organization:** Add any movie or show to any of your lists directly from its details page.
 * **🎥 Dynamic Content Discovery:** Browse extensive lists of movies and TV shows, categorized into:
     * Now Playing, Popular, Top Rated, and Upcoming Movies.
     * On The Air, Popular, and Top Rated TV Shows.
