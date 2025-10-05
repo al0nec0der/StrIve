@@ -152,7 +152,6 @@ const ImportReview = () => {
             </button>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -160,7 +159,7 @@ const ImportReview = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pt-16">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-6 text-center">Review Import</h1>
           
@@ -305,7 +304,6 @@ const ImportReview = () => {
           onCancel={() => setSearchModal({ isOpen: false, item: null, index: null })}
         />
       </main>
-      <Footer />
     </div>
   );
 };

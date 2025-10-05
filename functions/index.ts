@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as csvParse from 'csv-parse/lib/sync';
-import * as Busboy from 'busboy';
+import * as Papa from 'papaparse';
+import Busboy from 'busboy';
 
 // Initialize the Firebase Admin SDK
 if (!admin.apps.length) {
@@ -83,7 +83,7 @@ export const exportListToCsv = functions.https.onRequest(async (req, res) => {
 
     if (itemsSnapshot.empty) {
       // Return an empty CSV with headers
-      const csvHeaders = 'tmdbId,Name,Year,Letterboxd URI\n';
+      const csvHeaders = 'tmdbId,Name,Year,type\n';
       res.set('Content-Type', 'text/csv');
       res.set('Content-Disposition', `attachment; filename="list-${listId}-export.csv"`);
       return res.status(200).send(csvHeaders);
@@ -91,7 +91,7 @@ export const exportListToCsv = functions.https.onRequest(async (req, res) => {
 
     // Prepare CSV data
     const csvRows: string[] = [];
-    csvRows.push('tmdbId,Name,Year,Letterboxd URI'); // CSV headers
+    csvRows.push('tmdbId,Name,Year,type'); // CSV headers
 
     // Process each item in the list
     for (const doc of itemsSnapshot.docs) {
@@ -101,14 +101,13 @@ export const exportListToCsv = functions.https.onRequest(async (req, res) => {
       const tmdbId = item.id || '';
       const name = item.title || '';
       const year = item.release_date ? new Date(item.release_date).getFullYear().toString() : '';
-      // For now, using a placeholder for Letterboxd URI - could be enhanced in the future
-      const letterboxdUri = item.letterboxdUri || `https://letterboxd.com/film/tmdb-${item.id}`;
+      const type = item.media_type || 'movie'; // Default to 'movie' if not specified
       
       csvRows.push([
         escapeCsvField(tmdbId.toString()),
         escapeCsvField(name),
         escapeCsvField(year),
-        escapeCsvField(letterboxdUri)
+        escapeCsvField(type)
       ].join(','));
     }
 
@@ -128,21 +127,94 @@ export const exportListToCsv = functions.https.onRequest(async (req, res) => {
 
 // Create a separate function for the specific URL pattern /lists/{listId}/export
 export const listsExport = functions.https.onRequest(async (req, res) => {
-  // This function handles the URL pattern where listId is part of the path
-  // The URL would be like: /lists/<listId>/export
-  // Extract listId from the path
-  const pathParts = req.path.split('/');
-  const listIdIndex = pathParts.indexOf('lists');
+  const pathParts = req.path.split('/').filter(part => part !== ''); // Remove empty parts
   
-  if (listIdIndex === -1 || listIdIndex + 1 >= pathParts.length) {
-    return res.status(400).json({ error: 'List ID is required in URL' });
+  // Find 'lists' in the path and get the ID that follows
+  const listsIndex = pathParts.indexOf('lists');
+  if (listsIndex === -1 || listsIndex + 1 >= pathParts.length) {
+    return res.status(400).json({ error: 'Invalid URL path. Expected /lists/{listId}/export' });
   }
   
-  const listId = pathParts[listIdIndex + 1];
+  const listId = pathParts[listsIndex + 1];
   
-  // Forward to the main export logic
-  req.query.listId = listId;
-  return exportListToCsv(req, res);
+  // The rest is the same as exportListToCsv but with the extracted listId
+  if (!listId) {
+    return res.status(400).json({ error: 'List ID is required' });
+  }
+
+  // Get the authenticated user
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid authorization header' });
+  }
+
+  const token = authHeader.substring(7);
+  let decodedToken;
+
+  try {
+    decodedToken = await admin.auth().verifyIdToken(token);
+  } catch (error) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
+
+  const userId = decodedToken.uid;
+
+  // Check if the user owns the list
+  const listRef = db.collection('users').doc(userId).collection('custom_lists').doc(listId);
+  const listDoc = await listRef.get();
+
+  if (!listDoc.exists) {
+    return res.status(404).json({ error: 'List not found' });
+  }
+
+  // Verify that the list belongs to the authenticated user
+  const listData = listDoc.data();
+  if (!listData || listData.ownerId !== userId) {
+    return res.status(403).json({ error: 'Forbidden: You do not have permission to access this list' });
+  }
+
+  // Fetch all items in the list
+  const itemsCollectionRef = db.collection('users').doc(userId).collection('custom_lists').doc(listId).collection('items');
+  const itemsSnapshot = await itemsCollectionRef.get();
+
+  if (itemsSnapshot.empty) {
+    // Return an empty CSV with headers
+    const csvHeaders = 'tmdbId,Name,Year,type\n';
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', `attachment; filename="list-${listId}-export.csv"`);
+    return res.status(200).send(csvHeaders);
+  }
+
+  // Prepare CSV data
+  const csvRows: string[] = [];
+  csvRows.push('tmdbId,Name,Year,type'); // CSV headers
+
+  // Process each item in the list
+  for (const doc of itemsSnapshot.docs) {
+    const item = doc.data();
+    
+    // Extract the required fields for CSV
+    const tmdbId = item.id || '';
+    const name = item.title || '';
+    const year = item.release_date ? new Date(item.release_date).getFullYear().toString() : '';
+    const type = item.media_type || 'movie'; // Default to 'movie' if not specified
+    
+    csvRows.push([
+      escapeCsvField(tmdbId.toString()),
+      escapeCsvField(name),
+      escapeCsvField(year),
+      escapeCsvField(type)
+    ].join(','));
+  }
+
+  const csvContent = csvRows.join('\n');
+
+  // Set appropriate headers for file download
+  res.set('Content-Type', 'text/csv');
+  res.set('Content-Disposition', `attachment; filename="list-${listId}-export.csv"`);
+  res.set('Cache-Control', 'no-cache');
+
+  return res.status(200).send(csvContent);
 });
 
 // Interface for movie data
@@ -311,10 +383,10 @@ export const analyzeListImport = functions.https.onRequest(async (req, res) => {
       try {
         // Parse the CSV buffer
         const csvString = csvBuffer.toString('utf8');
-        const csvData = csvParse(csvString, {
-          columns: true, // Use first row as column names
-          skip_empty_lines: true,
-        });
+        const csvData = Papa.parse(csvString, {
+          header: true, // Use first row as column names (equivalent to columns: true)
+          skipEmptyLines: true, // Skip empty lines
+        }).data;
 
         if (!Array.isArray(csvData) || csvData.length === 0) {
           return res.status(400).json({ error: 'CSV file is empty or invalid' });

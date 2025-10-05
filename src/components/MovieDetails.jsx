@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { options } from "../util/constants";
 import { addToList } from "../util/firestoreService";
 import { addItem } from "../util/listsSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import Header from "./Header";
 import { Play, Plus, Star, RotateCcw } from "lucide-react";
 import useRequireAuth from "../hooks/useRequireAuth";

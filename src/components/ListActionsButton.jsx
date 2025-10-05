@@ -11,7 +11,6 @@ const ListActionsButton = ({ mediaItem, listId, listDetails }) => {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   const memberships = useSelector((state) => state.lists.itemStatus.memberships);
-  const status = useSelector((state) => state.lists.itemStatus.status);
 
   useEffect(() => {
     if (user && mediaItem?.id) {

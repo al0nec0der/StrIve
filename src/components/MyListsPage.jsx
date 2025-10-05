@@ -42,7 +42,7 @@ const MyListsPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pt-16">
         <h1 className="text-3xl font-bold mb-6">My Lists</h1>
 
         {loading && <div className="text-center">Loading your lists...</div>}
@@ -99,7 +99,6 @@ const MyListsPage = () => {
           userId={user?.uid} 
         />
       </main>
-      <Footer />
     </div>
   );
 };

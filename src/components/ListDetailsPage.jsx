@@ -43,8 +43,9 @@ const ListDetailsPage = () => {
       const auth = getAuth();
       const token = await auth.currentUser.getIdToken();
 
-      // Make request to export endpoint
-      const response = await fetch(`/api/lists/${listId}/export`, {
+      // Use relative path for export endpoint
+      // This will work if Firebase Hosting is configured to rewrite /api/* to functions
+      const response = await fetch(`/lists/${listId}/export`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -89,7 +90,7 @@ const ListDetailsPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pt-16">
         {status === 'loading' && <div className="text-center">Loading list details...</div>}
         
         {error && <div className="text-center text-red-500">Error: {error}</div>}
@@ -133,7 +134,6 @@ const ListDetailsPage = () => {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 };

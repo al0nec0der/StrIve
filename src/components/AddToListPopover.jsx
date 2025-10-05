@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 const AddToListPopover = ({ onSelectList, onCreateNew }) => {
-  const { watchlist, customLists } = useSelector((state) => state.lists);
+  const { customLists } = useSelector((state) => state.lists);
 
   return (
     <div className="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200">

@@ -15,7 +15,6 @@ const ImportPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   const { lists, status, error: listsError } = useSelector((state) => state.lists.userLists);
 
@@ -95,7 +94,7 @@ const ImportPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 pt-16">
         <div className="max-w-2xl mx-auto bg-gray-900 rounded-xl p-6 shadow-lg">
           <h1 className="text-3xl font-bold text-white mb-6 text-center">Import CSV to Your Movie List</h1>
           
@@ -192,7 +191,6 @@ const ImportPage = () => {
           </form>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

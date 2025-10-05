@@ -6,7 +6,6 @@ import {
   deleteCustomList, 
   addItemToCustomList, 
   removeItemFromCustomList, 
-  fetchUserLists, 
   fetchListWithItems,
   fetchUserListsWithPreviews
 } from "./firestoreService";
@@ -153,7 +152,17 @@ const listsSlice = createSlice({
       })
       .addCase(fetchLists.fulfilled, (state, action) => {
         state.customLists.status = "succeeded";
-        state.customLists.lists = action.payload;
+        // Convert Firestore Timestamps to serializable format
+        state.customLists.lists = action.payload.map(list => {
+          // If the list has a createdAt Timestamp, convert it to ISO string
+          if (list.createdAt && typeof list.createdAt.toDate === 'function') {
+            return {
+              ...list,
+              createdAt: list.createdAt.toDate().toISOString()
+            };
+          }
+          return list;
+        });
       })
       .addCase(fetchLists.rejected, (state, action) => {
         state.customLists.status = "failed";
@@ -223,8 +232,23 @@ const listsSlice = createSlice({
       })
       .addCase(fetchActiveList.fulfilled, (state, action) => {
         state.activeList.status = "succeeded";
-        state.activeList.details = action.payload;
-        state.activeList.items = action.payload.items || [];
+        // Convert any Timestamps in the list details to serializable format
+        const listDetails = action.payload;
+        if (listDetails.createdAt && typeof listDetails.createdAt.toDate === 'function') {
+          listDetails.createdAt = listDetails.createdAt.toDate().toISOString();
+        }
+        
+        state.activeList.details = listDetails;
+        // Convert any Timestamps in the items to serializable format
+        state.activeList.items = (action.payload.items || []).map(item => {
+          if (item.dateAdded && typeof item.dateAdded.toDate === 'function') {
+            return {
+              ...item,
+              dateAdded: item.dateAdded.toDate().toISOString()
+            };
+          }
+          return item;
+        });
         state.activeList.error = null;
       })
       .addCase(fetchActiveList.rejected, (state, action) => {

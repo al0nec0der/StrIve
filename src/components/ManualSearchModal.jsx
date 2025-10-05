@@ -5,9 +5,7 @@ const ManualSearchModal = ({
   isOpen, 
   onClose, 
   initialQuery, 
-  year, 
-  onSelectMovie, 
-  onCancel 
+  onSelectMovie 
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [searchResults, setSearchResults] = useState([]);
@@ -187,12 +185,12 @@ const ManualSearchModal = ({
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-700 flex justify-end space-x-3">
+        <div className="p-4 border-t border-gray-700 flex justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
           >
-            Cancel
+            Close
           </button>
         </div>
       </div>
